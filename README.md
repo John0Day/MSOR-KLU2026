@@ -169,13 +169,13 @@ Potential improvements include:
 
 ---
 
-## Contributors
+## Contributors:
 
-*Isaac 
-*John
-*Alhajie
-*Chandar
-*Satya
+* Isaac 
+* John
+* Alhajie
+* Chandar
+* Satya
 
 
 ---
