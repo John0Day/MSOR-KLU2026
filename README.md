@@ -171,11 +171,11 @@ Potential improvements include:
 
 ## Contributors
 
-Isaac Ebu-Danso
-John
-Alhajie
-Chandar
-Satya
+*Isaac 
+*John
+*Alhajie
+*Chandar
+*Satya
 
 
 ---
