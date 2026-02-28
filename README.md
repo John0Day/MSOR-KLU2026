@@ -1,49 +1,49 @@
 # MSOR-KLU2026 - 6x6 Checkers (MDP, Heuristic, Reinforcement Learning)
 
-Dieses Repository implementiert ein 6x6-Checkers-Projekt für Management Science / Operations Research mit drei Policy-Typen (Random, Heuristik, RL), reproduzierbaren Experimenten und Spielmodi für Mensch-vs-Mensch sowie Mensch-vs-Computer.
+This repository implements a 6x6 checkers project for Management Science / Operations Research, including three policy types (Random, Heuristic, RL), reproducible experiments, and play modes for Human-vs-Human and Human-vs-Computer.
 
-## 1. Für die Lehrperson: Theoretische Erkenntnisse
+## 1. For the Instructor: Theoretical Insights
 
-### 1.1 Problem als MDP
-Wir modellieren Checkers als episodisches Markov Decision Process `M = (S, A, T, R, gamma)`:
+### 1.1 Problem Formulation as an MDP
+We model checkers as an episodic Markov Decision Process `M = (S, A, T, R, gamma)`:
 
-- `S` (State): komplette Brettbelegung + Spieler am Zug + Multi-Jump-Zwangskontext.
-- `A(s)` (Action): nur legale Züge, inklusive Forced-Capture-Regel.
-- `T(s,a)` (Transition): deterministisch (Zug anwenden, evtl. Schlag entfernen, Promotion, Zugrecht-Update).
-- `R(s,a,s')`: `+1` (Sieg), `-1` (Niederlage), `0` (sonst).
-- Episode-Ende: keine legalen Züge (`terminated=True`) oder Turn-Cap (`truncated=True`) für stabile Evaluation.
+- `S` (State): full board configuration + player to move + forced multi-jump context.
+- `A(s)` (Action): legal moves only, including forced-capture constraints.
+- `T(s,a)` (Transition): deterministic (apply move, remove captured piece if any, promote if needed, update turn).
+- `R(s,a,s')`: `+1` (win), `-1` (loss), `0` (otherwise).
+- Episode end: no legal moves (`terminated=True`) or turn cap (`truncated=True`) for stable evaluation.
 
-### 1.2 Zentrale theoretische Einsichten
-- **Zustandsraum vs. Lösbarkeit:** 6x6 reduziert die Komplexität gegenüber 8x8, erhält aber wesentliche strategische Struktur (Forced Captures, Kings, Multi-Jumps).
-- **Deterministische Dynamik:** Da `T` deterministisch ist, hängen Lernschwierigkeiten primär an Zustandsgröße, Exploration und Reward-Sparseness, nicht an stochastischer Transition.
-- **Dynamischer Aktionsraum:** Durch Forced Captures ist `A(s)` stark zustandsabhängig. Action-Masking ist deshalb konzeptionell und praktisch wichtig.
-- **Heuristik als erklärbare Baseline:** Material + Mobility + Advancement liefern eine nachvollziehbare, interpretierbare Referenz gegen Random und RL.
-- **RL-Lernsignal:** Sparse Terminal-Reward macht das Problem schwerer; Leistungsgewinn benötigt ausreichend Episoden und sinnvolle Gegnerwahl (Random vs. Heuristik).
+### 1.2 Key Theoretical Findings
+- **State-space size vs. tractability:** 6x6 reduces complexity compared to 8x8 while preserving core strategic structure (forced captures, kings, multi-jumps).
+- **Deterministic dynamics:** because `T` is deterministic, learning difficulty is driven mainly by state-space size, exploration, and sparse rewards rather than transition stochasticity.
+- **Dynamic action space:** with forced captures, `A(s)` is strongly state-dependent. Action masking is therefore both conceptually and practically important.
+- **Heuristic as interpretable baseline:** material + mobility + advancement provide a transparent benchmark against Random and RL.
+- **RL learning signal:** sparse terminal rewards make the task harder; performance gains require enough episodes and appropriate training opponents (Random vs. Heuristic).
 
-### 1.3 Methodische Aussagekraft
-Das Projekt erlaubt eine saubere Gegenüberstellung von:
+### 1.3 Methodological Value
+The project supports a clean comparison of:
 
-- regelbasierter Entscheidungslogik (Heuristik),
-- zufälliger Policy (Random) als Untergrenze,
-- datengetriebenem Lernen (tabular Q-Learning).
+- rule-based decision logic (Heuristic),
+- random policy (Random) as a lower baseline,
+- data-driven learning (tabular Q-learning).
 
-Dadurch können typische OR/RL-Fragen transparent diskutiert werden:
+This enables transparent discussion of typical OR/RL questions:
 
-- Wann schlägt eine handgebaute Policy eine gelernte Policy?
-- Wie wirkt sich die Trainingsverteilung (Gegnerwahl) auf Generalisierung aus?
-- Welche Limitationen hat tabulares Lernen bei wachsendem Zustandsraum?
+- When does a hand-crafted policy outperform a learned policy?
+- How does training distribution (opponent choice) affect generalization?
+- What are the practical limits of tabular learning as state-space grows?
 
-### 1.4 Verifizierbarkeit der Ergebnisse
-Die Nachvollziehbarkeit ist absichtlich technisch abgesichert:
+### 1.4 Reproducibility and Auditability
+Reproducibility is intentionally enforced via:
 
-- fixe Seeds in Training und Evaluation,
-- explizite Output-Artefakte (Metriken, Plots, Q-Table),
-- Unit-Tests für kritische Regeln (Forced Capture, Multi-Jump, Promotion, Terminalzustand).
+- fixed seeds in training and evaluation,
+- explicit output artifacts (metrics, plots, Q-table),
+- unit tests for rule-critical behavior (forced capture, multi-jump, promotion, terminal detection).
 
 ## 2. GitHub-Style Installation
 
-### 2.1 Voraussetzungen
-- Python `3.10+` (im Projekt wird durchgehend `python3` verwendet)
+### 2.1 Prerequisites
+- Python `3.10+` (this project consistently uses `python3`)
 - `pip`
 
 ### 2.2 Setup
@@ -55,12 +55,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2.3 Schnelltest
+### 2.3 Quick Verification
 ```bash
 python3 run.py test
 ```
 
-## 3. Reproduzierbare Experimente
+## 3. Reproducible Experiments
 
 ### 3.1 Training
 ```bash
@@ -72,8 +72,8 @@ python3 run.py train --episodes 8000 --seed 42 --opponent heuristic --out experi
 python3 run.py eval --q-table experiments/results/q_table.npy --games 300 --seed 42 --out experiments/results
 ```
 
-### 3.3 Erwartete Artefakte
-Nach Training/Evaluation in `experiments/results/`:
+### 3.3 Expected Output Artifacts
+After training/evaluation, `experiments/results/` should include:
 
 - `q_table.npy`
 - `training_metrics.npz`
@@ -82,18 +82,18 @@ Nach Training/Evaluation in `experiments/results/`:
 - `winrate_over_training.png`
 - `head_to_head_winrates.png`
 
-## 4. Spielmodi (Runner)
+## 4. Play Modes (Runner)
 
-### 4.1 Interaktives Menü
+### 4.1 Interactive Menu
 ```bash
 python3 run.py
 ```
 
-Mehrstufige Auswahl möglich:
+Supported multi-step flow:
 - `Play locally` (Human vs Human)
-- `Play against computer` -> `CLI/GUI` -> Gegnerwahl (`Random`, `Heuristic`, `RL`) -> Farbwahl
+- `Play against computer` -> `CLI/GUI` -> opponent (`Random`, `Heuristic`, `RL`) -> color selection
 
-### 4.2 Direkte Commands
+### 4.2 Direct Commands
 ```bash
 python3 run.py human-cli
 python3 run.py human-gui
@@ -102,36 +102,36 @@ python3 run.py ai-gui --opponent random --human-color r --seed 42
 python3 run.py ai-cli --opponent rl --human-color b --q-table experiments/results/q_table.npy --seed 42
 ```
 
-## 5. Projektbeschreibung und Struktur
+## 5. Project Description and Structure
 
 ```text
-src/checkers/      Kernlogik + Gymnasium-Environment
-agents/            Random-, Heuristic- und Q-Table-Agent
-experiments/       Training, Evaluation, Plot-Erzeugung
-play/              Human-vs-AI in CLI und GUI
-tests/             Regeltests
-run.py             Zentraler Launcher
+src/checkers/      Core logic + Gymnasium environment
+agents/            Random, Heuristic, and Q-table agents
+experiments/       Training, evaluation, plot generation
+play/              Human-vs-AI modes for CLI and GUI
+tests/             Rule-focused tests
+run.py             Unified launcher
 ```
 
-Wichtige Dateien:
-- `src/checkers/core.py`: Regelwerk (legal moves, captures, promotion, transitions)
-- `src/checkers/env.py`: Gymnasium-Wrapper mit Action-Mask
-- `agents/heuristic_agent.py`: erklärbare Baseline-Policy
-- `experiments/train_q_learning.py`: tabulares RL-Training
-- `experiments/evaluate_agents.py`: Head-to-Head-Vergleich
-- `play/human_vs_ai_cli.py`, `play/human_vs_ai_gui.py`: Spielen gegen Computer
+Key files:
+- `src/checkers/core.py`: rule engine (legal moves, captures, promotion, transitions)
+- `src/checkers/env.py`: Gymnasium wrapper with action masking
+- `agents/heuristic_agent.py`: interpretable baseline policy
+- `experiments/train_q_learning.py`: tabular RL training
+- `experiments/evaluate_agents.py`: head-to-head comparison
+- `play/human_vs_ai_cli.py`, `play/human_vs_ai_gui.py`: human-vs-computer gameplay
 
-## 6. Grenzen und sinnvolle Erweiterungen
+## 6. Limitations and Extensions
 
-- Tabular Q-Learning skaliert nur begrenzt bei größerem Zustandsraum.
-- Gegen starke Heuristiken kann mehr Training oder alternative Approximation (z. B. DQN) nötig sein.
-- Potenzielle Erweiterungen:
-  - Self-Play-Curriculum,
-  - Feature-Engineering/State-Aggregation,
-  - systematische Hyperparameter-Sweeps,
-  - getrennte Evaluation nach Startfarbe.
+- Tabular Q-learning scales poorly as state-space grows.
+- Against stronger heuristics, additional training or function approximation (for example DQN) may be required.
+- Useful extensions:
+  - self-play curriculum,
+  - feature engineering / state aggregation,
+  - systematic hyperparameter sweeps,
+  - separate evaluation by starting color.
 
-## 7. Zusatzdokument
+## 7. Additional Documentation
 
-Für eine kompakte Schritt-für-Schritt-Bedienung:
+For concise step-by-step usage instructions:
 - [USAGE.md](USAGE.md)
