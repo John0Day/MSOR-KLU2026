@@ -2,8 +2,8 @@
 ## Comparison of a Rule-Based Heuristic and Tabular Q-Learning
 
 **Course:** MSOR-KLU2026  
-**Team:** _(add names)_  
-**Date:** _(add date)_
+**Team:** _Satya, Isaac, John, Chandan, Bun Kijera_  
+**Date:** _02.03.2026_
 
 ---
 
