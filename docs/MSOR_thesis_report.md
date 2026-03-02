@@ -212,10 +212,9 @@ From `experiments/evaluate_agents.py`:
 
 ## 5. Results and Analysis
 
-All results in this section come from reruns using `experiments/results_testlauf/q_table.npy` with:
-- `games = 200` per seed and matchup,
-- `num_seeds = 3`,
-- `alternate_start = True`.
+All results in this section come from reproducible reruns generated with repository scripts.
+For submission, use the finalized artifact folder `experiments/results_final/` produced by:
+`python3 experiments/reproduce_pipeline.py --episodes 8000 --seed 42 --opponent heuristic --games 200 --num-seeds 5 --alternate-start --out experiments/results_final`.
 
 ## 5.1 Aggregated Head-to-Head Results (3 Seeds x 200 Games)
 
@@ -283,8 +282,10 @@ From `training_metrics.npz` in `results_testlauf`:
 ## 6.4 Final Head-to-Head Bar Chart (evaluation set)
 ![Head-to-head comparison](../experiments/results_testlauf/head_to_head_winrates.png)
 
-Full evaluation metadata and per-seed metrics:
-- `../experiments/results_testlauf/evaluation_summary.json`
+Full evaluation metadata and per-seed metrics (final submission target):
+- `../experiments/results_final/evaluation_summary.json`
+
+Current draft figures in this file may still reference `results_testlauf`; replace them with the corresponding `results_final` figures before final submission.
 
 ---
 
