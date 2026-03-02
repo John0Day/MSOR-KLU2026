@@ -69,7 +69,7 @@ python3 run.py train --episodes 8000 --seed 42 --opponent heuristic --out experi
 
 ### 3.2 Evaluation
 ```bash
-python3 run.py eval --q-table experiments/results/q_table.npy --games 300 --seed 42 --out experiments/results
+python3 experiments/evaluate_agents.py --q-table experiments/results/q_table.npy --games 200 --seed 42 --num-seeds 5 --alternate-start --out experiments/results
 ```
 
 ### 3.3 Erwartete Artefakte
@@ -81,6 +81,7 @@ Nach Training/Evaluation in `experiments/results/`:
 - `episode_length_curve.png`
 - `winrate_over_training.png`
 - `head_to_head_winrates.png`
+- `evaluation_summary.json` (per-seed + aggregate metrics, including win-rate CI, draws, captures, promotions, material difference)
 
 ## 4. Spielmodi (Runner)
 
