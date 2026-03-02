@@ -35,6 +35,21 @@ python3 run.py eval --q-table experiments/results/q_table.npy --games 300 --seed
 python3 run.py test
 ```
 
+Extended evaluation example (recommended for reporting):
+
+```bash
+python3 experiments/evaluate_agents.py \
+  --q-table experiments/results/q_table.npy \
+  --games 200 \
+  --seed 42 \
+  --num-seeds 5 \
+  --alternate-start \
+  --out experiments/results
+```
+
+This produces `evaluation_summary.json` with per-seed and aggregated metrics
+(win/loss/draw rates, average episode length, mean return, truncation count).
+
 ## Recommended Reproducible Workflow
 
 1. Run tests
