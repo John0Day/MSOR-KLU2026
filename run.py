@@ -224,8 +224,12 @@ def _interactive_mode_selection() -> list[str]:
     args = [ui_mode, "--opponent", opponent, "--human-color", human_color]
     if opponent == "rl":
         q_default = "experiments/results/q_table.npy"
-        q_path = input(f"Q-table path [{q_default}]: ").strip()
-        args.extend(["--q-table", q_path or q_default])
+        if Path(q_default).exists():
+            print(f"Using default Q-table: {q_default}")
+            args.extend(["--q-table", q_default])
+        else:
+            q_path = input(f"Q-table path [{q_default}] (required): ").strip()
+            args.extend(["--q-table", q_path or q_default])
     return args
 
 

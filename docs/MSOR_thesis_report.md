@@ -174,7 +174,7 @@ for each episode:
 
 ## 4.1 Configuration from Repository Scripts
 From `experiments/train_q_learning.py`:
-- episodes: `300` (for current stored test run in `results_testlauf`)
+- episodes: `8000` (for the latest run used in this report)
 - alpha: `0.15`
 - gamma: `0.99`
 - epsilon: start `1.0`, end `0.05`, decay `0.9993`
@@ -212,80 +212,88 @@ From `experiments/evaluate_agents.py`:
 
 ## 5. Results and Analysis
 
-All results in this section come from reproducible reruns generated with repository scripts.
-For submission, use the finalized artifact folder `experiments/results_final/` produced by:
-`python3 experiments/reproduce_pipeline.py --episodes 8000 --seed 42 --opponent heuristic --games 200 --num-seeds 5 --alternate-start --out experiments/results_final`.
+All results in this section come from reproducible reruns generated with repository scripts using:
+- `q_table = experiments/results/q_table.npy`
+- `games = 200` per seed and matchup
+- `num_seeds = 5`
+- `alternate_start = True`
 
-## 5.1 Aggregated Head-to-Head Results (3 Seeds x 200 Games)
+## 5.1 Aggregated Head-to-Head Results (5 Seeds x 200 Games)
 
 ### 5.1.1 RL vs Random
-- mean win/loss/draw rates: `0.478 / 0.453 / 0.068`
-- win-rate std across seeds: `0.006`
-- mean return: `0.025` (std `0.036`)
-- mean episode length: `46.25` (std `5.01`)
-- pooled wins/losses/draws over 600 games: `287 / 272 / 41`
-- pooled 95% Wilson CI for win rate: `[0.439, 0.518]`
+- mean win/loss/draw rates: `0.488 / 0.454 / 0.058`
+- mean return: `0.034`
+- mean episode length: `44.85`
+- mean captures/promotions: `4.42 / 1.10`
+- mean terminal material difference: `-0.21`
+- pooled 95% Wilson CI for win rate: `[0.457, 0.519]`
 
 ### 5.1.2 RL vs Heuristic
-- mean win/loss/draw rates: `0.000 / 0.500 / 0.500`
-- win-rate std across seeds: `0.000`
-- mean return: `-0.500` (std `0.000`)
-- mean episode length: `116.00` (std `0.00`)
-- pooled wins/losses/draws over 600 games: `0 / 300 / 300`
-- pooled 95% Wilson CI for win rate: `[0.000, 0.006]`
+- mean win/loss/draw rates: `0.500 / 0.000 / 0.500`
+- mean return: `0.500`
+- mean episode length: `115.00`
+- mean captures/promotions: `4.00 / 1.00`
+- mean terminal material difference: `2.00`
+- pooled 95% Wilson CI for win rate: `[0.469, 0.531]`
 
 ### 5.1.3 Heuristic vs Random
-- mean win/loss/draw rates: `0.973 / 0.023 / 0.003`
-- win-rate std across seeds: `0.005`
-- mean return: `0.950` (std `0.014`)
-- mean episode length: `31.32` (std `1.30`)
-- pooled wins/losses/draws over 600 games: `584 / 14 / 2`
-- pooled 95% Wilson CI for win rate: `[0.957, 0.984]`
+- mean win/loss/draw rates: `0.966 / 0.030 / 0.004`
+- mean return: `0.936`
+- mean episode length: `31.56`
+- mean captures/promotions: `5.75 / 1.95`
+- mean terminal material difference: `5.79`
+- pooled 95% Wilson CI for win rate: `[0.953, 0.976]`
 
-## 5.2 Learning Dynamics (Current Stored Run)
-From `training_metrics.npz` in `results_testlauf`:
-- episodes trained: `300`
-- mean reward: `-0.98`
-- mean reward (last 20 episodes): `-1.00`
-- mean episode length: `28.86`
-- mean episode length (last 20): `28.50`
-- checkpoint at episode 250: win rate vs Random `0.25`, vs Heuristic `0.00`
+## 5.2 Color-Conditioned Behavior (Critical Finding)
+Additional split analysis reveals strong side asymmetry in `RL vs Heuristic`:
 
-## 5.3 Interpretation
+- **RL as Black (first player):** `1000/1000` wins, `0` draws, average length `29.0`
+- **RL as Red (second player):** `0` wins, `1000/1000` draws (all truncated), average length `201.0`
+
+This explains the aggregate `0.5` win rate and `0.5` draw rate. The current RL policy appears to be strong as first mover, while as second mover it primarily forces long draws until truncation.
+
+## 5.3 Learning Dynamics (Latest 8000-Episode Run)
+From `training_metrics.npz` in `experiments/results`:
+- episodes trained: `8000`
+- mean reward: `-0.620`
+- mean reward (last 200 episodes): `0.415`
+- mean episode length: `81.29`
+- mean episode length (last 200): `55.42`
+- final checkpoint (episode 8000): win rate vs Random `0.412`, vs Heuristic `1.000`
+
+## 5.4 Interpretation
 - The heuristic baseline is currently the strongest policy.
-- RL under current setup is functional but substantially underperforming.
+- RL under current setup is functional and improved against Random, but remains behaviorally asymmetric against Heuristic.
 - Likely causes:
   1. sparse terminal reward signal,
-  2. short training horizon in current result set,
+  2. role-dependent game dynamics (first-player advantage),
   3. large effective state-action sparsity due to dynamic legal action sets,
   4. fixed-opponent training dynamics.
 
-## 5.4 Validity and Caveats
+## 5.5 Validity and Caveats
 - Training remains asymmetric (controlled-side RL against a fixed opponent policy).
 - Draws exist and should be analyzed separately from wins/losses.
-- Current training horizon (300 episodes in stored run) is likely below convergence for tabular learning.
+- A substantial share of RL-vs-Heuristic outcomes are truncation draws when RL plays second.
 - Additional game-level indicators (captures/promotions/material) improve interpretability but do not replace policy-level robustness checks across larger seed sets.
 
 ---
 
 ## 6. Visualization
 
-## 6.1 Reward Curve (300 episodes, moving average window = 100)
-![Reward curve](../experiments/results_testlauf/reward_curve.png)
+## 6.1 Reward Curve (8000 episodes, moving average window = 100)
+![Reward curve](../experiments/results/reward_curve.png)
 
-## 6.2 Episode Length Curve (300 episodes, moving average window = 100)
-![Episode length](../experiments/results_testlauf/episode_length_curve.png)
+## 6.2 Episode Length Curve (8000 episodes, moving average window = 100)
+![Episode length](../experiments/results/episode_length_curve.png)
 
 ## 6.3 Win Rate over Training (evaluated every 250 episodes, 80 games per checkpoint)
-![Winrate over training](../experiments/results_testlauf/winrate_over_training.png)
+![Winrate over training](../experiments/results/winrate_over_training.png)
 
 ## 6.4 Final Head-to-Head Bar Chart (evaluation set)
-![Head-to-head comparison](../experiments/results_testlauf/head_to_head_winrates.png)
+![Head-to-head comparison](../experiments/results/head_to_head_winrates.png)
 
-Full evaluation metadata and per-seed metrics (final submission target):
-- `../experiments/results_final/evaluation_summary.json`
-
-Current draft figures in this file may still reference `results_testlauf`; replace them with the corresponding `results_final` figures before final submission.
+Full evaluation metadata and per-seed metrics:
+- `../experiments/results/evaluation_summary.json`
 
 ---
 

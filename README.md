@@ -59,6 +59,16 @@ python3 experiments/reproduce_pipeline.py \
 
 `evaluation_summary.json` includes per-seed and aggregate metrics, win-rate confidence intervals, draw rates, captures, promotions, and terminal material difference.
 
+## Latest Findings (Current Run Snapshot)
+
+From `experiments/results/evaluation_summary.json` (5 seeds, 200 games per seed, alternating start):
+
+- RL vs Random: `win=0.488`, `loss=0.454`, `draw=0.058`, `ci95=[0.457, 0.519]`
+- RL vs Heuristic: `win=0.500`, `loss=0.000`, `draw=0.500`, `ci95=[0.469, 0.531]`
+- Heuristic vs Random: `win=0.966`, `loss=0.030`, `draw=0.004`, `ci95=[0.953, 0.976]`
+
+Important interpretation: in additional color-conditioned analysis, RL wins consistently as first player against Heuristic but mostly reaches truncation draws as second player. Therefore, aggregate win rates should be interpreted together with draw and truncation behavior.
+
 ## Manual Commands (If Needed)
 
 Training:
