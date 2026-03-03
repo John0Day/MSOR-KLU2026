@@ -62,21 +62,39 @@ def piece_moves(board: list[list[str]], row: int, col: int) -> tuple[list[Move],
 
     normals: list[Move] = []
     captures: list[Move] = []
-    enemy = "r" if owner(piece) == "b" else "b"
+    piece_owner = owner(piece)
+    if piece_owner is None:
+        return [], []
+    enemy = "r" if piece_owner == "b" else "b"
+    is_king = piece in ("B", "R")
 
     for dr, dc in move_dirs(piece):
-        nr, nc = row + dr, col + dc
-        if in_bounds(nr, nc) and board[nr][nc] == EMPTY:
-            normals.append(Move(row, col, nr, nc))
+        if is_king:
+            nr, nc = row + dr, col + dc
+            while in_bounds(nr, nc) and board[nr][nc] == EMPTY:
+                normals.append(Move(row, col, nr, nc))
+                nr += dr
+                nc += dc
 
-        jr, jc = row + 2 * dr, col + 2 * dc
-        if (
-            in_bounds(jr, jc)
-            and board[jr][jc] == EMPTY
-            and in_bounds(nr, nc)
-            and owner(board[nr][nc]) == enemy
-        ):
-            captures.append(Move(row, col, jr, jc, captured=(nr, nc)))
+            if in_bounds(nr, nc) and owner(board[nr][nc]) == enemy:
+                jr, jc = nr + dr, nc + dc
+                while in_bounds(jr, jc) and board[jr][jc] == EMPTY:
+                    captures.append(Move(row, col, jr, jc, captured=(nr, nc)))
+                    jr += dr
+                    jc += dc
+        else:
+            nr, nc = row + dr, col + dc
+            if in_bounds(nr, nc) and board[nr][nc] == EMPTY:
+                normals.append(Move(row, col, nr, nc))
+
+            jr, jc = row + 2 * dr, col + 2 * dc
+            if (
+                in_bounds(jr, jc)
+                and board[jr][jc] == EMPTY
+                and in_bounds(nr, nc)
+                and owner(board[nr][nc]) == enemy
+            ):
+                captures.append(Move(row, col, jr, jc, captured=(nr, nc)))
 
     return normals, captures
 

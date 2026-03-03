@@ -127,7 +127,39 @@ def piece_moves(board: list[list[str]], row: int, col: int) -> tuple[list[Move],
 
     enemy = "r" if owner(piece) == "b" else "b"
 
+    is_king = piece in ("B", "R")
+
     for dr, dc in move_dirs(piece):
+        if is_king:
+            nr, nc = row + dr, col + dc
+            captured_enemy: tuple[int, int] | None = None
+
+            while in_bounds(nr, nc):
+                square_owner = owner(board[nr][nc])
+
+                if board[nr][nc] == EMPTY:
+                    if captured_enemy is None:
+                        normals.append(Move(row, col, nr, nc))
+                    else:
+                        captures.append(Move(row, col, nr, nc, captured=captured_enemy))
+                    nr += dr
+                    nc += dc
+                    continue
+
+                # Encountered a piece. Kings may only capture a single enemy per direction.
+                if square_owner == owner(piece):
+                    break
+
+                if captured_enemy is not None:
+                    break
+
+                # First enemy encountered; continue scanning for landing squares beyond it.
+                captured_enemy = (nr, nc)
+                nr += dr
+                nc += dc
+
+            continue
+
         nr, nc = row + dr, col + dc
 
         # Normal move: adjacent diagonal square is empty.

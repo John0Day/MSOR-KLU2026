@@ -19,6 +19,32 @@ def test_forced_capture_only_returns_capture_moves():
     assert (moves[0].to_row, moves[0].to_col) == (4, 3)
 
 
+def test_king_can_slide_multiple_squares_diagonally():
+    board = empty_board()
+    board[2][1] = "B"
+
+    moves = all_legal_moves(board, "b")
+
+    destinations = {(move.to_row, move.to_col) for move in moves if move.captured is None}
+    assert (0, 3) in destinations  # up-right slide over multiple squares
+    assert (5, 4) in destinations  # down-right slide reaching far edge
+
+
+def test_king_can_land_any_empty_square_after_capture():
+    board = empty_board()
+    board[4][1] = "B"
+    board[3][2] = "r"
+
+    moves = all_legal_moves(board, "b")
+
+    capture_targets = {
+        (move.to_row, move.to_col)
+        for move in moves
+        if move.captured == (3, 2)
+    }
+    assert capture_targets == {(2, 3), (1, 4), (0, 5)}
+
+
 def test_multi_jump_is_forced_in_env():
     pytest.importorskip("gymnasium")
     from src.checkers.env import Checkers6x6Env
