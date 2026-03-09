@@ -21,7 +21,7 @@ from src.checkers.env import Checkers6x6Env
 
 @dataclass
 class TrainConfig:
-    episodes: int = 8000
+    episodes: int = 20000
     alpha: float = 0.15
     gamma: float = 0.99
     epsilon_start: float = 1.0
@@ -255,7 +255,7 @@ def plot_training(results: dict, out_dir: Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train tabular Q-learning on 6x6 checkers")
-    parser.add_argument("--episodes", type=int, default=8000)
+    parser.add_argument("--episodes", type=int, default=20000)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--opponent", choices=["random", "heuristic"], default="heuristic")
     parser.add_argument("--out", type=str, default="experiments/results")

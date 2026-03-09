@@ -190,6 +190,12 @@ def run_plots_extended(args: argparse.Namespace) -> int:
         args.out,
         "--window",
         str(args.window),
+        "--q-table",
+        args.q_table,
+        "--perf-games",
+        str(args.perf_games),
+        "--perf-seed",
+        str(args.perf_seed),
     ]
     return _run(cmd, headless=True)
 
@@ -213,7 +219,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_ai_gui.add_argument("--seed", type=int, default=42)
 
     p_train = sub.add_parser("train", help="Train RL (extended default)")
-    p_train.add_argument("--episodes", type=int, default=20000)
+    p_train.add_argument("--episodes", type=int, default=100000)
     p_train.add_argument("--gamma", type=float, default=0.99)
     p_train.add_argument("--eval-interval", type=int, default=1000)
     p_train.add_argument("--eval-games", type=int, default=80)
@@ -229,7 +235,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval.add_argument("--out", type=str, default="experiments/results")
 
     p_train_legacy = sub.add_parser("train-legacy", help="Legacy baseline training")
-    p_train_legacy.add_argument("--episodes", type=int, default=8000)
+    p_train_legacy.add_argument("--episodes", type=int, default=20000)
     p_train_legacy.add_argument("--seed", type=int, default=42)
     p_train_legacy.add_argument("--opponent", choices=["random", "heuristic"], default="heuristic")
     p_train_legacy.add_argument("--out", type=str, default="experiments/results")
@@ -243,7 +249,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval_legacy.add_argument("--out", type=str, default="experiments/results")
 
     p_train_ext = sub.add_parser("train-extended", help="Train with adaptive curriculum/self-play")
-    p_train_ext.add_argument("--episodes", type=int, default=20000)
+    p_train_ext.add_argument("--episodes", type=int, default=100000)
     p_train_ext.add_argument("--gamma", type=float, default=0.99)
     p_train_ext.add_argument("--eval-interval", type=int, default=1000)
     p_train_ext.add_argument("--eval-games", type=int, default=80)
@@ -263,6 +269,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_plots_ext.add_argument("--metrics", type=str, default="experiments/results/training_metrics.npz")
     p_plots_ext.add_argument("--out", type=str, default="experiments/results")
     p_plots_ext.add_argument("--window", type=int, default=500)
+    p_plots_ext.add_argument("--q-table", type=str, default="experiments/results/q_table.npy")
+    p_plots_ext.add_argument("--perf-games", type=int, default=300)
+    p_plots_ext.add_argument("--perf-seed", type=int, default=42)
 
     sub.add_parser("test", help="Run unit tests")
     return parser
