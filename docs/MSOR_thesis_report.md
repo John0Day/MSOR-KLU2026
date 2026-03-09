@@ -79,13 +79,15 @@ Transitions are deterministic:
 5. otherwise switch player.
 
 ### 2.4 Reward Function `R`
-Baseline environment rewards:
+Environment reward design (current default):
 
-- `+1` terminal win,
-- `-1` terminal loss / invalid terminal action,
-- `0` non-terminal transition.
+- `-0.005` step penalty for each valid move,
+- `+0.1` capture bonus,
+- `+0.15` promotion bonus,
+- `+1.0` terminal win bonus,
+- `-1.0` terminal loss / invalid terminal action.
 
-Extended training computes cycle rewards from the agent perspective across agent-opponent turns.
+This adds dense intermediate feedback while preserving terminal outcome incentives.
 
 ### 2.5 Discount `gamma`
 `gamma = 0.99`.
@@ -189,24 +191,19 @@ All experiments below were run via `run.py` on 09 March 2026.
 
 ## 6. Experimental Setup
 
-## 6.1 Baseline Runs
+## 6.1 Primary Runs (Current Default)
 
 ```bash
-python3 run.py train --episodes 8000 --seed 42 --opponent heuristic --out experiments/results
-python3 experiments/evaluate_agents.py \
-  --q-table experiments/results/q_table.npy \
-  --games 200 \
-  --seed 42 \
-  --num-seeds 5 \
-  --alternate-start \
-  --out experiments/results
+python3 run.py train --episodes 20000 --seed 42 --out experiments/results
+python3 run.py eval --q-table experiments/results/q_table.npy --games 300 --seed 42 --num-seeds 5 --alternate-start --out experiments/results
+python3 run.py plots-extended --metrics experiments/results/training_metrics.npz --out experiments/results --window 500
 ```
 
-## 6.2 Extended Runs
+## 6.2 Legacy Baseline Runs (Reference Only)
 
 ```bash
-python3 run.py train-extended --episodes 20000 --seed 42 --out experiments/results
-python3 run.py plots-extended --metrics experiments/results/training_metrics.npz --out experiments/results --window 500
+python3 run.py train-legacy --episodes 8000 --seed 42 --opponent heuristic --out experiments/results
+python3 run.py eval-legacy --q-table experiments/results/q_table.npy --games 200 --seed 42 --num-seeds 5 --alternate-start --out experiments/results
 ```
 
 ---
@@ -274,20 +271,20 @@ To justify the default training budget, we ran a controlled comparison:
 Aggregated over the three runs per config:
 
 - **Config A (20000 episodes)**
-  - RL vs Random: `win=0.523 +/- 0.005`
-  - RL vs Heuristic: `win=0.790 +/- 0.027`
-  - Heuristic vs Random: `win=0.675 +/- 0.004`
+  - RL vs Random: `win=0.523 +- 0.005`
+  - RL vs Heuristic: `win=0.790 +- 0.027`
+  - Heuristic vs Random: `win=0.675 +- 0.004`
 
 - **Config B (40000 episodes)**
-  - RL vs Random: `win=0.537 +/- 0.009`
-  - RL vs Heuristic: `win=0.678 +/- 0.155`
-  - Heuristic vs Random: `win=0.671 +/- 0.007`
+  - RL vs Random: `win=0.537 +- 0.009`
+  - RL vs Heuristic: `win=0.678 +- 0.155`
+  - Heuristic vs Random: `win=0.671 +- 0.007`
 
 Conclusion from this ablation:
 
 - Increasing to `40000` episodes marginally improved RL vs Random.
 - Against the main benchmark (RL vs Heuristic), `40000` episodes were less stable and weaker on average due to high variance across seeds.
-- Therefore, `20000` episodes is selected as the default because it provides the best tradeoff between performance, stability, and compute time in our current setup.
+- Therefore, `20000` episodes is selected as the default because it provides the best trade-off between performance, stability, and compute time in our current setup.
 
 ---
 

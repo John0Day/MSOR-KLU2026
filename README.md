@@ -1,20 +1,25 @@
 # MSOR-KLU2026 - 6x6 Checkers (MDP, Heuristic, RL)
 
-This project models a 6x6 checkers environment as an episodic MDP and compares a rule-based heuristic policy against tabular Q-learning. It includes reproducible training/evaluation pipelines, statistical analysis outputs, and play modes for human-vs-human and human-vs-computer.
+This project models 6x6 checkers as an episodic Markov Decision Process (MDP) and compares a rule-based heuristic policy against tabular reinforcement learning (RL).
 
-## Instructor-Focused Summary
+The repository provides:
 
-- Formal MDP formulation (`S, A, T, R, gamma`) with deterministic transitions.
-- Dynamic legal-action handling with forced-capture constraints.
-- Two required solution approaches implemented:
-  - Heuristic rule-based strategy.
-  - Tabular Q-learning with epsilon-greedy exploration.
-- Reproducible evaluation with:
-  - alternating starting side,
-  - multi-seed aggregation,
-  - draw handling,
-  - confidence intervals for win rate,
-  - additional game-level metrics (captures, promotions, terminal material difference).
+- a Gymnasium environment,
+- heuristic and RL agents,
+- reproducible training and evaluation workflows,
+- a unified runner (`run.py`),
+- plots and report artifacts.
+
+## Key Features
+
+- Formal MDP framing (`S, A, T, R, gamma`)
+- Forced-capture and multi-jump rule handling
+- Two solution approaches:
+  - Rule-based heuristic
+  - Tabular Q-learning (adaptive extended workflow)
+- Reproducible experiments with fixed seeds
+- Multi-seed head-to-head evaluation with confidence intervals
+- Reward shaping in the environment (capture/promotion/step feedback)
 
 ## Installation
 
@@ -26,110 +31,85 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Quick check:
+Quick sanity check:
 
 ```bash
 python3 run.py test
 ```
 
-## One-Command Reproducible Pipeline (Recommended)
+## Primary Workflow (Recommended)
 
-Run full training + evaluation and write final artifacts to `experiments/results_final`:
-
-```bash
-python3 experiments/reproduce_pipeline.py \
-  --episodes 8000 \
-  --seed 42 \
-  --opponent heuristic \
-  --games 200 \
-  --num-seeds 5 \
-  --alternate-start \
-  --out experiments/results_final
-```
-
-## Expected Final Artifacts (`experiments/results_final/`)
-
-- `q_table.npy`
-- `training_metrics.npz`
-- `reward_curve.png`
-- `episode_length_curve.png`
-- `winrate_over_training.png`
-- `head_to_head_winrates.png`
-- `evaluation_summary.json`
-
-`evaluation_summary.json` includes per-seed and aggregate metrics, win-rate confidence intervals, draw rates, captures, promotions, and terminal material difference.
-
-## Latest Findings (Current Run Snapshot)
-
-From `experiments/results/evaluation_summary.json` (5 seeds, 200 games per seed, alternating start):
-
-- RL vs Random: `win=0.488`, `loss=0.454`, `draw=0.058`, `ci95=[0.457, 0.519]`
-- RL vs Heuristic: `win=0.500`, `loss=0.000`, `draw=0.500`, `ci95=[0.469, 0.531]`
-- Heuristic vs Random: `win=0.966`, `loss=0.030`, `draw=0.004`, `ci95=[0.953, 0.976]`
-
-Important interpretation: in additional color-conditioned analysis, RL wins consistently as first player against Heuristic but mostly reaches truncation draws as second player. Therefore, aggregate win rates should be interpreted together with draw and truncation behavior.
-
-## Manual Commands (If Needed)
-
-Training:
-
-```bash
-python3 run.py train --episodes 20000 --seed 42 --out experiments/results
-```
-
-Evaluation:
-
-```bash
-python3 run.py eval \
-  --q-table experiments/results/q_table.npy \
-  --games 300 \
-  --seed 42 \
-  --num-seeds 5 \
-  --alternate-start \
-  --out experiments/results
-```
-
-## Play Modes
-
-Interactive menu:
+Use the interactive menu:
 
 ```bash
 python3 run.py
 ```
 
-Direct commands:
+Or run directly:
+
+```bash
+python3 run.py train --episodes 20000 --seed 42 --out experiments/results
+python3 run.py eval --q-table experiments/results/q_table.npy --games 300 --seed 42 --num-seeds 5 --alternate-start --out experiments/results
+python3 run.py plots-extended --metrics experiments/results/training_metrics.npz --out experiments/results --window 500
+```
+
+## Additional Commands
+
+Play modes:
 
 ```bash
 python3 run.py human-cli
 python3 run.py human-gui
 python3 run.py ai-cli --opponent heuristic --human-color b --seed 42
 python3 run.py ai-gui --opponent random --human-color r --seed 42
-python3 run.py ai-cli --opponent rl --human-color b --q-table experiments/results/q_table.npy --seed 42
+python3 run.py play-extended --q-table experiments/results/q_table.npy --episodes 50 --opponent heuristic --agent-color b
 ```
+
+Legacy baseline pipeline (kept for comparison/backward compatibility):
+
+```bash
+python3 run.py train-legacy --episodes 8000 --seed 42 --opponent heuristic --out experiments/results
+python3 run.py eval-legacy --q-table experiments/results/q_table.npy --games 300 --seed 42 --num-seeds 5 --alternate-start --out experiments/results
+```
+
+## Output Artifacts
+
+Typical output directory: `experiments/results/`
+
+- `q_table.npy`
+- `training_metrics.npz`
+- `evaluation_summary.json`
+- `head_to_head_winrates.png`
+- `winrate_over_training.png`
+- `learning_curve_win_rate.png`
+- `state_space_growth.png`
+- `game_length.png`
+- `eval_black_vs_red_win_rates.png`
 
 ## Project Structure
 
 ```text
 src/checkers/      core rules + Gymnasium environment
-agents/            random, heuristic, and Q-table agents
-experiments/       train/evaluate/reproduce scripts
-play/              human-vs-AI gameplay (CLI/GUI)
-tests/             rule-focused unit tests
+agents/            heuristic, random, and Q-table agents
+experiments/       training, evaluation, plots, and batch scripts
+play/              gameplay and evaluation scripts
+tests/             unit tests
 run.py             unified launcher
 ```
 
 ## Main Files
 
-- `src/checkers/core.py` - legal moves, captures, promotion, transitions
-- `src/checkers/env.py` - Gymnasium wrapper + action mask
-- `agents/heuristic_agent.py` - interpretable baseline policy
-- `experiments/train_q_learning.py` - tabular RL training
-- `experiments/evaluate_agents.py` - robust multi-seed evaluation
-- `experiments/reproduce_pipeline.py` - one-command reproducibility pipeline
-- `docs/MSOR_thesis_report.md` - thesis-style report draft
+- `src/checkers/core.py` - legal moves, capture logic, promotion, transitions
+- `src/checkers/env.py` - Gymnasium environment and reward signal
+- `agents/heuristic_agent.py` - heuristic agents
+- `agents/q_agent.py` - baseline and adaptive Q-table agents
+- `experiments/train_extended.py` - default RL training workflow
+- `experiments/evaluate_extended_agents.py` - default RL evaluation workflow
+- `experiments/plots_extended.py` - plotting pipeline
+- `docs/MSOR_thesis_report.md` - thesis-style write-up
 
-## Notes and Limits
+## Notes
 
-- Tabular Q-learning is intentionally simple and may underperform against strong heuristics under short training horizons.
-- For stronger RL results, increase episodes and compare multiple seeds.
-- A concise usage guide is available in [USAGE.md](USAGE.md).
+- The default workflow is the extended RL setup (`train` / `eval`).
+- The legacy workflow remains available for baseline comparison.
+- A concise command reference is available in `USAGE.md`.
