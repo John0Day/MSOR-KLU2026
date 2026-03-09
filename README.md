@@ -41,16 +41,10 @@ A custom 6x6 Checkers reinforcement learning project built on top of a Gymnasium
 ### Prerequisites
 
 - **Python**: **Python 3.8+** (3.8, 3.9, 3.10 or newer should work)
-- **Core Libraries** (installed via `requirements.txt`):
+- **Core Libraries** (exactly as listed in `requirements.txt`):
   - **NumPy** (`numpy`)
   - **Gymnasium** (`gymnasium`)
   - **Matplotlib** (`matplotlib`)
-
-If you prefer to install manually without `requirements.txt`, you can do:
-
-```bash
-pip install numpy gymnasium matplotlib
-```
 
 ---
 
@@ -78,14 +72,12 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-4. **Install dependencies**
+3. **Install dependencies**
+
+All required runtime dependencies are captured in `requirements.txt` and match the list above:
 
 ```bash
 pip install -r requirements.txt
-```
-
-```bash
-pip install numpy gymnasium matplotlib
 ```
 
 ---
