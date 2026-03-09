@@ -74,15 +74,15 @@ Important interpretation: in additional color-conditioned analysis, RL wins cons
 Training:
 
 ```bash
-python3 run.py train --episodes 8000 --seed 42 --opponent heuristic --out experiments/results
+python3 run.py train --episodes 20000 --seed 42 --out experiments/results
 ```
 
 Evaluation:
 
 ```bash
-python3 experiments/evaluate_agents.py \
+python3 run.py eval \
   --q-table experiments/results/q_table.npy \
-  --games 200 \
+  --games 300 \
   --seed 42 \
   --num-seeds 5 \
   --alternate-start \
