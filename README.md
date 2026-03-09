@@ -137,8 +137,8 @@ This will:
   - The opponent is either:
     - **Random** (uniform random legal moves), or
     - **Heuristic** (`PriorityHeuristicAgent`, rule-based).
-- Print each board state and the current player to the terminal after every move using `env.render()`.
-- Print per-episode results and an aggregate summary:
+- Prints each board state and the current player to the terminal after every move using `env.render()`.
+- Prints per-episode results and an aggregate summary:
 
   - Total wins, losses, and draws across episodes.
 
@@ -155,7 +155,7 @@ python plots.py
 This script will:
 
 - Load `training_stats.npz` and `q_table.pkl`.
-- Generate the following PNG files in the same directory:
+- Generates the following PNG files in the same directory:
 
   - **`learning_curve_win_rate.png`**  
     Moving-average training win rate (from agent’s perspective) plus **decoupled** evaluation win rates vs Random and Heuristic opponents at 1000-episode checkpoints.
