@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 
 from src.checkers.core import BOARD_SIZE, Move, all_legal_moves, apply_move, clone_board
@@ -89,3 +90,54 @@ class HeuristicAgent:
 
     def select_action(self, env) -> int:
         return self.select_move_index(env.board, env.player, env.legal_moves)
+
+
+class PriorityHeuristicAgent:
+    """
+    Priority-based heuristic (capture > promotion > edge > center > random).
+    """
+
+    def __init__(self, player: str):
+        self.player = player
+
+    def _is_promotion(self, board: list[list[str]], move: Move) -> bool:
+        piece = board[move.from_row][move.from_col]
+        if self.player == "b" and piece == "b" and move.to_row == BOARD_SIZE - 1:
+            return True
+        if self.player == "r" and piece == "r" and move.to_row == 0:
+            return True
+        return False
+
+    def _center_score(self, move: Move) -> float:
+        center = (BOARD_SIZE - 1) / 2.0
+        dr = move.to_row - center
+        dc = move.to_col - center
+        return float((BOARD_SIZE - 1) - (dr * dr + dc * dc) ** 0.5)
+
+    def select_move_index(self, board: list[list[str]], legal_moves: list[Move]) -> int:
+        if not legal_moves:
+            return 0
+        capture_moves = [m for m in legal_moves if m.captured is not None]
+        if capture_moves:
+            chosen = random.choice(capture_moves)
+            return legal_moves.index(chosen)
+
+        promo_moves = [m for m in legal_moves if self._is_promotion(board, m)]
+        if promo_moves:
+            chosen = random.choice(promo_moves)
+            return legal_moves.index(chosen)
+
+        edge_moves = [m for m in legal_moves if m.to_col in (0, BOARD_SIZE - 1)]
+        if edge_moves:
+            chosen = random.choice(edge_moves)
+            return legal_moves.index(chosen)
+
+        scored = sorted(enumerate(legal_moves), key=lambda x: self._center_score(x[1]), reverse=True)
+        if scored and self._center_score(scored[0][1]) > 0:
+            best = self._center_score(scored[0][1])
+            top = [i for i, m in scored if self._center_score(m) == best]
+            return random.choice(top)
+        return int(random.randrange(len(legal_moves)))
+
+    def select_action(self, env) -> int:
+        return self.select_move_index(env.board, env.legal_moves)

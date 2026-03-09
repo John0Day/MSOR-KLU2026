@@ -16,26 +16,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from agents import HeuristicAgent, QTableAgent, RandomAgent
+from agents import AdaptiveQTableAgent, PriorityHeuristicAgent, RandomAgent
 from src.checkers.env import Checkers6x6Env
 
 
 def load_q_table(path: Path) -> dict:
     items = np.load(path, allow_pickle=True)
     return dict(items.tolist())
-
-
-def _material_balance_black(board: list[list[str]]) -> int:
-    values = {"b": 1, "B": 2, "r": 1, "R": 2}
-    black = 0
-    red = 0
-    for row in board:
-        for p in row:
-            if p in ("b", "B"):
-                black += values[p]
-            elif p in ("r", "R"):
-                red += values[p]
-    return black - red
 
 
 def _wilson_interval(successes: float, total: float, z: float = 1.96) -> tuple[float, float]:
@@ -48,42 +35,25 @@ def _wilson_interval(successes: float, total: float, z: float = 1.96) -> tuple[f
     return max(0.0, center - margin), min(1.0, center + margin)
 
 
+def _select_action(agent, env: Checkers6x6Env) -> int:
+    if isinstance(agent, AdaptiveQTableAgent):
+        return agent.select_move_index(env._obs(), env.legal_moves, exploit_only=True)
+    if isinstance(agent, PriorityHeuristicAgent):
+        if agent.player != env.player:
+            agent = PriorityHeuristicAgent(player=env.player)
+        return agent.select_action(env)
+    return agent.select_action(env)
+
+
 def play_game(black_agent, red_agent, seed: int) -> dict:
     env = Checkers6x6Env(seed=seed)
     env.reset(seed=seed)
     steps = 0
-    black_captures = 0
-    red_captures = 0
-    black_promotions = 0
-    red_promotions = 0
 
     while True:
-        action_player = env.player
-        action = black_agent.select_action(env) if action_player == "b" else red_agent.select_action(env)
-        chosen = env.legal_moves[action]
-        moving_piece = env.board[chosen.from_row][chosen.from_col]
-        was_capture = chosen.captured is not None
-
+        action = _select_action(black_agent if env.player == "b" else red_agent, env)
         _, _, terminated, truncated, info = env.step(action)
         steps += 1
-
-        if was_capture:
-            if action_player == "b":
-                black_captures += 1
-            else:
-                red_captures += 1
-
-        landed_piece = env.board[chosen.to_row][chosen.to_col]
-        was_promotion = (
-            moving_piece in ("b", "r")
-            and landed_piece in ("B", "R")
-            and moving_piece.lower() == landed_piece.lower()
-        )
-        if was_promotion:
-            if action_player == "b":
-                black_promotions += 1
-            else:
-                red_promotions += 1
 
         if terminated or truncated:
             winner = info.get("winner", "draw")
@@ -93,42 +63,28 @@ def play_game(black_agent, red_agent, seed: int) -> dict:
                 "steps": steps,
                 "truncated": bool(truncated),
                 "black_return": black_return,
-                "black_captures": float(black_captures),
-                "red_captures": float(red_captures),
-                "black_promotions": float(black_promotions),
-                "red_promotions": float(red_promotions),
-                "material_balance_black": float(_material_balance_black(env.board)),
             }
 
 
-def matchup(agent_a, agent_b, games: int, seed: int, alternate_start: bool = True) -> dict[str, float]:
+def matchup(agent_a_factory, agent_b_factory, games: int, seed: int, alternate_start: bool = True) -> dict[str, float]:
     a_wins = 0
     a_losses = 0
     draws = 0
     lengths: list[int] = []
     returns: list[float] = []
-    captures: list[float] = []
-    promotions: list[float] = []
-    material_diffs: list[float] = []
     truncations = 0
 
     for i in range(games):
         a_is_black = (i % 2 == 0) or (not alternate_start)
-        black = agent_a if a_is_black else agent_b
-        red = agent_b if a_is_black else agent_a
+        black = agent_a_factory(i) if a_is_black else agent_b_factory(i)
+        red = agent_b_factory(i) if a_is_black else agent_a_factory(i)
 
         game = play_game(black, red, seed=seed + i)
         black_return = float(game["black_return"])
         a_return = black_return if a_is_black else -black_return
-        a_captures = float(game["black_captures"] if a_is_black else game["red_captures"])
-        a_promotions = float(game["black_promotions"] if a_is_black else game["red_promotions"])
-        a_material_diff = float(game["material_balance_black"] if a_is_black else -game["material_balance_black"])
 
         lengths.append(int(game["steps"]))
         returns.append(a_return)
-        captures.append(a_captures)
-        promotions.append(a_promotions)
-        material_diffs.append(a_material_diff)
         truncations += int(game["truncated"])
 
         if a_return > 0:
@@ -149,47 +105,24 @@ def matchup(agent_a, agent_b, games: int, seed: int, alternate_start: bool = Tru
         "draw_rate": draws / n,
         "avg_length": float(np.mean(lengths)) if lengths else 0.0,
         "mean_return": float(np.mean(returns)) if returns else 0.0,
-        "avg_captures": float(np.mean(captures)) if captures else 0.0,
-        "avg_promotions": float(np.mean(promotions)) if promotions else 0.0,
-        "terminal_material_diff": float(np.mean(material_diffs)) if material_diffs else 0.0,
         "truncations": float(truncations),
     }
 
 
-def bar_plot(results: dict[str, float], out_path: Path) -> None:
-    labels = list(results.keys())
-    values = [results[k] for k in labels]
-    plt.figure(figsize=(9, 5))
-    plt.bar(labels, values)
-    plt.ylim(0.0, 1.0)
-    plt.ylabel("Winrate")
-    plt.title("Agent comparison")
-    plt.xticks(rotation=15, ha="right")
-    plt.tight_layout()
-    plt.savefig(out_path, dpi=150)
-    plt.close()
-
-
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Evaluate RL/Heuristic/Random agents")
-    p.add_argument("--q-table", type=str, default="experiments/results/q_table.npy")
-    p.add_argument("--games", type=int, default=300)
-    p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--num-seeds", type=int, default=1)
-    p.add_argument("--alternate-start", action=argparse.BooleanOptionalAction, default=True)
-    p.add_argument("--out", type=str, default="experiments/results")
-    return p.parse_args()
-
-
 def evaluate_for_seed(q: dict, games: int, seed: int, alternate_start: bool) -> dict[str, dict[str, float]]:
-    rl = QTableAgent(q, epsilon=0.0, seed=seed)
-    heuristic = HeuristicAgent()
-    random_agent = RandomAgent(seed=seed + 1)
+    def rl_factory(i: int):
+        return AdaptiveQTableAgent(q_table=q, seed=seed + 10_000 + i)
+
+    def heur_factory(i: int):
+        return PriorityHeuristicAgent(player="b")
+
+    def rand_factory(i: int):
+        return RandomAgent(seed=seed + 20_000 + i)
 
     return {
-        "RL vs Random": matchup(rl, random_agent, games, seed + 1000, alternate_start),
-        "RL vs Heuristic": matchup(rl, heuristic, games, seed + 2000, alternate_start),
-        "Heuristic vs Random": matchup(heuristic, random_agent, games, seed + 3000, alternate_start),
+        "RL vs Random": matchup(rl_factory, rand_factory, games, seed + 1000, alternate_start),
+        "RL vs Heuristic": matchup(rl_factory, heur_factory, games, seed + 2000, alternate_start),
+        "Heuristic vs Random": matchup(heur_factory, rand_factory, games, seed + 3000, alternate_start),
     }
 
 
@@ -215,13 +148,38 @@ def aggregate_over_seeds(per_seed: dict[str, dict[str, dict[str, float]]]) -> di
     return aggregate
 
 
+def bar_plot(results: dict[str, float], out_path: Path) -> None:
+    labels = list(results.keys())
+    values = [results[k] for k in labels]
+    plt.figure(figsize=(9, 5))
+    plt.bar(labels, values)
+    plt.ylim(0.0, 1.0)
+    plt.ylabel("Winrate")
+    plt.title("Agent comparison (extended)")
+    plt.xticks(rotation=15, ha="right")
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=150)
+    plt.close()
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Evaluate RL/Heuristic/Random agents (extended RL)")
+    p.add_argument("--q-table", type=str, default="experiments/results/q_table.npy")
+    p.add_argument("--games", type=int, default=300)
+    p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--num-seeds", type=int, default=5)
+    p.add_argument("--alternate-start", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--out", type=str, default="experiments/results")
+    return p.parse_args()
+
+
 def main() -> None:
     args = parse_args()
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     q = load_q_table(Path(args.q_table))
-    seeds = [args.seed + 10000 * i for i in range(args.num_seeds)]
+    seeds = [args.seed + 10_000 * i for i in range(args.num_seeds)]
     per_seed: dict[str, dict[str, dict[str, float]]] = {}
     for s in seeds:
         per_seed[f"seed_{s}"] = evaluate_for_seed(q, args.games, s, args.alternate_start)
@@ -236,9 +194,6 @@ def main() -> None:
             f"draw={stats['draw_rate_mean']:.3f}, "
             f"avg_len={stats['avg_length_mean']:.2f}, "
             f"return={stats['mean_return_mean']:.3f}, "
-            f"cap={stats['avg_captures_mean']:.2f}, "
-            f"prom={stats['avg_promotions_mean']:.2f}, "
-            f"mat={stats['terminal_material_diff_mean']:.2f}, "
             f"ci95=[{stats['win_rate_ci95_low']:.3f},{stats['win_rate_ci95_high']:.3f}]"
         )
 
@@ -253,6 +208,7 @@ def main() -> None:
             "base_seed": args.seed,
             "num_seeds": args.num_seeds,
             "alternate_start": args.alternate_start,
+            "mode": "extended",
         },
         "per_seed": per_seed,
         "aggregate": aggregate,
