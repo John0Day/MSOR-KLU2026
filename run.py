@@ -96,6 +96,61 @@ def run_tests() -> int:
     return _run([sys.executable, "-m", "pytest", "-q"], headless=True)
 
 
+def run_train_extended(args: argparse.Namespace) -> int:
+    cmd = [
+        sys.executable,
+        str(ROOT / "experiments" / "train_extended.py"),
+        "--episodes",
+        str(args.episodes),
+        "--gamma",
+        str(args.gamma),
+        "--eval-interval",
+        str(args.eval_interval),
+        "--eval-games",
+        str(args.eval_games),
+        "--seed",
+        str(args.seed),
+        "--out",
+        args.out,
+    ]
+    return _run(cmd, headless=True)
+
+
+def run_play_extended(args: argparse.Namespace) -> int:
+    cmd = [
+        sys.executable,
+        str(ROOT / "play" / "evaluate_extended.py"),
+        "--q-table",
+        args.q_table,
+        "--episodes",
+        str(args.episodes),
+        "--opponent",
+        args.opponent,
+        "--agent-color",
+        args.agent_color,
+        "--render" if args.render else "--no-render",
+        "--sleep",
+        str(args.sleep),
+        "--seed",
+        str(args.seed),
+    ]
+    return _run(cmd)
+
+
+def run_plots_extended(args: argparse.Namespace) -> int:
+    cmd = [
+        sys.executable,
+        str(ROOT / "experiments" / "plots_extended.py"),
+        "--metrics",
+        args.metrics,
+        "--out",
+        args.out,
+        "--window",
+        str(args.window),
+    ]
+    return _run(cmd, headless=True)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Unified launcher for MSOR-KLU2026 checkers")
     sub = parser.add_subparsers(dest="mode", required=True)
@@ -126,6 +181,28 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval.add_argument("--seed", type=int, default=42)
     p_eval.add_argument("--out", type=str, default="experiments/results")
 
+    p_train_ext = sub.add_parser("train-extended", help="Train with adaptive curriculum/self-play")
+    p_train_ext.add_argument("--episodes", type=int, default=20000)
+    p_train_ext.add_argument("--gamma", type=float, default=0.99)
+    p_train_ext.add_argument("--eval-interval", type=int, default=1000)
+    p_train_ext.add_argument("--eval-games", type=int, default=80)
+    p_train_ext.add_argument("--seed", type=int, default=42)
+    p_train_ext.add_argument("--out", type=str, default="experiments/results")
+
+    p_play_ext = sub.add_parser("play-extended", help="Evaluate trained Q-table (extended mode)")
+    p_play_ext.add_argument("--q-table", type=str, default="experiments/results/q_table.npy")
+    p_play_ext.add_argument("--episodes", type=int, default=20)
+    p_play_ext.add_argument("--opponent", choices=["random", "heuristic"], default="random")
+    p_play_ext.add_argument("--agent-color", choices=["b", "r"], default="b")
+    p_play_ext.add_argument("--render", action=argparse.BooleanOptionalAction, default=False)
+    p_play_ext.add_argument("--sleep", type=float, default=0.15)
+    p_play_ext.add_argument("--seed", type=int, default=42)
+
+    p_plots_ext = sub.add_parser("plots-extended", help="Generate extended training plots")
+    p_plots_ext.add_argument("--metrics", type=str, default="experiments/results/training_metrics.npz")
+    p_plots_ext.add_argument("--out", type=str, default="experiments/results")
+    p_plots_ext.add_argument("--window", type=int, default=500)
+
     sub.add_parser("test", help="Run unit tests")
     return parser
 
@@ -148,7 +225,10 @@ def _interactive_mode_selection() -> list[str]:
         "2": "play-ai",
         "3": "train",
         "4": "eval",
-        "5": "test",
+        "5": "train-extended",
+        "6": "play-extended",
+        "7": "plots-extended",
+        "8": "test",
         "0": "exit",
     }
     print("Choose mode:")
@@ -157,14 +237,17 @@ def _interactive_mode_selection() -> list[str]:
     _print_line("2)", "Play against computer", "Choose UI and AI type")
     _print_line("3)", "Train Q-learning", "Run RL training and save outputs")
     _print_line("4)", "Evaluate agents", "Compare RL, heuristic, and random agents")
-    _print_line("5)", "Run tests", "Execute unit tests")
+    _print_line("5)", "Train extended", "Adaptive Q-learning + curriculum + self-play")
+    _print_line("6)", "Play extended", "Run trained model vs random/heuristic")
+    _print_line("7)", "Plots extended", "Generate extended plot set")
+    _print_line("8)", "Run tests", "Execute unit tests")
 
     mode = _prompt_choice(
-        "Enter number (0-5): ",
+        "Enter number (0-8): ",
         options,
-        "Invalid choice. Please enter 0, 1, 2, 3, 4, or 5.",
+        "Invalid choice. Please enter 0, 1, 2, 3, 4, 5, 6, 7, or 8.",
     )
-    if mode in {"exit", "train", "eval", "test"}:
+    if mode in {"exit", "train", "eval", "train-extended", "play-extended", "plots-extended", "test"}:
         return [mode]
 
     if mode == "play-human":
@@ -256,6 +339,12 @@ def main() -> int:
         return run_train(args)
     if args.mode == "eval":
         return run_eval(args)
+    if args.mode == "train-extended":
+        return run_train_extended(args)
+    if args.mode == "play-extended":
+        return run_play_extended(args)
+    if args.mode == "plots-extended":
+        return run_plots_extended(args)
     if args.mode == "test":
         return run_tests()
 

@@ -1,5 +1,15 @@
-from .heuristic_agent import HeuristicAgent, Weights
-from .q_agent import QTableAgent, state_hash
+from .heuristic_agent import HeuristicAgent, PriorityHeuristicAgent, Weights
+from .q_agent import AdaptiveQTableAgent, QTableAgent, canonical_state_hash, move_to_action, state_hash
 from .random_agent import RandomAgent
 
-__all__ = ["HeuristicAgent", "Weights", "QTableAgent", "state_hash", "RandomAgent"]
+__all__ = [
+    "AdaptiveQTableAgent",
+    "HeuristicAgent",
+    "PriorityHeuristicAgent",
+    "QTableAgent",
+    "RandomAgent",
+    "Weights",
+    "canonical_state_hash",
+    "move_to_action",
+    "state_hash",
+]

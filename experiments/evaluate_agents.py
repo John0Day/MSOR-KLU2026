@@ -17,7 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from agents import HeuristicAgent, QTableAgent, RandomAgent
-from env import Checkers6x6Env
+from src.checkers.env import Checkers6x6Env
 
 
 def load_q_table(path: Path) -> dict:
