@@ -263,6 +263,32 @@ Evaluation series (20 checkpoints):
 - Extended training improves aggregate evaluation performance in its own protocol and grows a substantially larger Q-table.
 - Color asymmetry remains important and should always be reported explicitly.
 
+## 7.5 Episode Budget Study (Why 20000 Episodes)
+To justify the default training budget, we ran a controlled comparison:
+
+- Config A: `20000` episodes
+- Config B: `40000` episodes
+- For each config: `3` training seeds (`42, 142, 242`)
+- Evaluation protocol per run: `games=300`, `num-seeds=10`, `alternate-start=True`
+
+Aggregated over the three runs per config:
+
+- **Config A (20000 episodes)**
+  - RL vs Random: `win=0.523 +/- 0.005`
+  - RL vs Heuristic: `win=0.790 +/- 0.027`
+  - Heuristic vs Random: `win=0.675 +/- 0.004`
+
+- **Config B (40000 episodes)**
+  - RL vs Random: `win=0.537 +/- 0.009`
+  - RL vs Heuristic: `win=0.678 +/- 0.155`
+  - Heuristic vs Random: `win=0.671 +/- 0.007`
+
+Conclusion from this ablation:
+
+- Increasing to `40000` episodes marginally improved RL vs Random.
+- Against the main benchmark (RL vs Heuristic), `40000` episodes were less stable and weaker on average due to high variance across seeds.
+- Therefore, `20000` episodes is selected as the default because it provides the best tradeoff between performance, stability, and compute time in our current setup.
+
 ---
 
 ## 8. Visualization

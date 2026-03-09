@@ -115,6 +115,11 @@ class Checkers6x6Env(gym.Env):
 
         move = self.legal_moves[action]
         was_capture, was_promoted = apply_move(self.board, move)
+        reward = -0.005
+        if was_capture:
+            reward += 0.1
+        if was_promoted:
+            reward += 0.15
 
         if was_capture and not was_promoted:
             next_caps = [
@@ -125,19 +130,19 @@ class Checkers6x6Env(gym.Env):
             if next_caps:
                 self.forced_piece = (move.to_row, move.to_col)
                 self.legal_moves = next_caps
-                return self._obs(), 0.0, False, False, {"action_mask": self.action_mask()}
+                return self._obs(), reward, False, False, {"action_mask": self.action_mask()}
 
         self.forced_piece = None
         self.player = "r" if self.player == "b" else "b"
         self._refresh_legal_moves()
 
         if not self.legal_moves:
-            return self._obs(), 1.0, True, False, {
+            return self._obs(), reward + 1.0, True, False, {
                 "winner": "r" if self.player == "b" else "b",
                 "action_mask": self.action_mask(),
             }
 
-        return self._obs(), 0.0, False, False, {"action_mask": self.action_mask()}
+        return self._obs(), reward, False, False, {"action_mask": self.action_mask()}
 
     def render(self):
         print("\n  a b c d e f")

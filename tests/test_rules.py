@@ -68,7 +68,8 @@ def test_multi_jump_is_forced_in_env():
 
     _, reward, terminated, truncated, _ = env.step(first_jump_idx)
 
-    assert reward == 0.0
+    # Reward shaping: +0.1 capture and -0.005 step penalty.
+    assert reward == pytest.approx(0.095)
     assert not terminated
     assert not truncated
     assert env.player == "b"
