@@ -1,3 +1,5 @@
+"""Priority-based heuristic agent used in the MSOR experiments."""
+
 from __future__ import annotations
 
 import random

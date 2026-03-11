@@ -1,3 +1,5 @@
+"""Utility for executing training + evaluation sequentially."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,11 +10,15 @@ from pathlib import Path
 
 
 def run(cmd: list[str], cwd: Path) -> None:
+    """Echo and execute a command relative to ``cwd``."""
+
     print("$", " ".join(cmd))
     subprocess.run(cmd, cwd=cwd, check=True)
 
 
 def parse_args() -> argparse.Namespace:
+    """CLI for specifying pipeline settings."""
+
     p = argparse.ArgumentParser(description="Reproduce full pipeline: training + evaluation")
     p.add_argument("--episodes", type=int, default=8000)
     p.add_argument("--seed", type=int, default=42)
@@ -25,6 +31,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the pipeline and summarize produced artifacts."""
+
     args = parse_args()
     root = Path(__file__).resolve().parents[1]
     out = Path(args.out)

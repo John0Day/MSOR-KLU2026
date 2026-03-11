@@ -1,3 +1,5 @@
+"""Command-line interface for humans to play the agents."""
+
 from __future__ import annotations
 
 import argparse
@@ -22,6 +24,8 @@ from src.checkers.core import (
 
 
 def load_ai(opponent: str, q_table: str, seed: int):
+    """Instantiate the requested opponent, reading a Q-table when needed."""
+
     if opponent == "random":
         return RandomAgent(seed=seed)
     if opponent == "heuristic":
@@ -34,10 +38,14 @@ def load_ai(opponent: str, q_table: str, seed: int):
 
 
 def current_player_name(player: str) -> str:
+    """Return human-friendly label for ``player``."""
+
     return "Black" if player == "b" else "Red"
 
 
 def ai_move_index(ai, board, player, legal_moves):
+    """Delegate to whichever agent type ``ai`` represents."""
+
     if isinstance(ai, HeuristicAgent):
         return ai.select_move_index(board, player, legal_moves)
     if isinstance(ai, QTableAgent):
@@ -48,6 +56,8 @@ def ai_move_index(ai, board, player, legal_moves):
 
 
 def play_human_vs_ai(opponent: str, human_color: str, q_table: str, seed: int) -> None:
+    """Main loop that alternates between human and AI moves."""
+
     board = create_board()
     player = "b"
     forced_piece: tuple[int, int] | None = None
@@ -122,6 +132,8 @@ def play_human_vs_ai(opponent: str, human_color: str, q_table: str, seed: int) -
 
 
 def parse_args() -> argparse.Namespace:
+    """CLI arguments for selecting opponent + configuration."""
+
     parser = argparse.ArgumentParser(description="Play 6x6 checkers in CLI against AI")
     parser.add_argument("--opponent", choices=["random", "heuristic", "rl"], default="heuristic")
     parser.add_argument("--human-color", choices=["b", "r"], default="b")
@@ -131,6 +143,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Entry point used when running the module directly."""
+
     args = parse_args()
     play_human_vs_ai(args.opponent, args.human_color, args.q_table, args.seed)
 

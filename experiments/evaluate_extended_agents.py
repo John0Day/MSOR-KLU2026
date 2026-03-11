@@ -1,3 +1,5 @@
+"""Extended evaluation harness built on top of the external core engine."""
+
 from __future__ import annotations
 
 import argparse
@@ -22,6 +24,8 @@ if str(CORE_DIR) not in sys.path:
 
 
 def _load_module(module_name: str, path: Path):
+    """Import ``module_name`` from ``path`` using importlib."""
+
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load module {module_name} from {path}")
@@ -31,6 +35,8 @@ def _load_module(module_name: str, path: Path):
 
 
 def _ensure_core_qtable(q_table_path: Path, core_q_path: Path) -> None:
+    """Write the Q-table in pickle format if the provided path is ``.npy``."""
+
     if q_table_path.suffix == ".pkl":
         shutil.copy2(q_table_path, core_q_path)
         return
@@ -41,6 +47,8 @@ def _ensure_core_qtable(q_table_path: Path, core_q_path: Path) -> None:
 
 
 def _wilson_interval(successes: float, total: float, z: float = 1.96) -> tuple[float, float]:
+    """Approximate a binomial confidence interval (95% by default)."""
+
     if total <= 0:
         return 0.0, 0.0
     phat = successes / total
@@ -50,7 +58,15 @@ def _wilson_interval(successes: float, total: float, z: float = 1.96) -> tuple[f
     return max(0.0, center - margin), min(1.0, center + margin)
 
 
-def _evaluate_matchup(play_mod, games: int, seed: int, opponent_type: str, alternate_start: bool) -> dict[str, float]:
+def _evaluate_matchup(
+    play_mod,
+    games: int,
+    seed: int,
+    opponent_type: str,
+    alternate_start: bool,
+) -> dict[str, float]:
+    """Play ``games`` matches and collect win/loss/draw stats."""
+
     wins = 0
     losses = 0
     draws = 0
@@ -98,6 +114,8 @@ def _evaluate_matchup(play_mod, games: int, seed: int, opponent_type: str, alter
 
 
 def _aggregate_over_seeds(per_seed: dict[str, dict[str, dict[str, float]]]) -> dict[str, dict[str, float]]:
+    """Mean/std aggregate for each matchup label across evaluated seeds."""
+
     labels = next(iter(per_seed.values())).keys()
     aggregate: dict[str, dict[str, float]] = {}
     for label in labels:
@@ -120,6 +138,8 @@ def _aggregate_over_seeds(per_seed: dict[str, dict[str, dict[str, float]]]) -> d
 
 
 def _bar_plot(results: dict[str, float], out_path: Path) -> None:
+    """Create a bar chart summarizing win rates per opponent."""
+
     labels = list(results.keys())
     values = [results[k] for k in labels]
     plt.figure(figsize=(9, 5))
@@ -134,6 +154,8 @@ def _bar_plot(results: dict[str, float], out_path: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """CLI arguments for the extended evaluation harness."""
+
     p = argparse.ArgumentParser(description="Evaluate RL vs random/heuristic using Chandan core")
     p.add_argument("--q-table", type=str, default="experiments/results/q_table.pkl")
     p.add_argument("--games", type=int, default=300)
@@ -145,6 +167,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Evaluate requested seeds/opponents and persist summary artifacts."""
+
     args = parse_args()
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -1,13 +1,19 @@
+"""Regression tests for the 6x6 rules implementation."""
+
 import pytest
 
 from src.checkers.core import BOARD_SIZE, EMPTY, Move, all_legal_moves, apply_move
 
 
 def empty_board():
+    """Return a BOARD_SIZE x BOARD_SIZE grid filled with EMPTY markers."""
+
     return [[EMPTY for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
 
 def test_forced_capture_only_returns_capture_moves():
+    """When a capture is available only those moves should be returned."""
+
     board = empty_board()
     board[2][1] = "b"
     board[3][2] = "r"
@@ -20,6 +26,8 @@ def test_forced_capture_only_returns_capture_moves():
 
 
 def test_king_can_slide_multiple_squares_diagonally():
+    """Kings should slide along diagonals until blocked."""
+
     board = empty_board()
     board[2][1] = "B"
 
@@ -31,6 +39,8 @@ def test_king_can_slide_multiple_squares_diagonally():
 
 
 def test_king_can_land_any_empty_square_after_capture():
+    """Kings must be able to land on any empty square beyond the jump target."""
+
     board = empty_board()
     board[4][1] = "B"
     board[3][2] = "r"
@@ -46,6 +56,8 @@ def test_king_can_land_any_empty_square_after_capture():
 
 
 def test_multi_jump_is_forced_in_env():
+    """Environment should enforce another capture when available."""
+
     pytest.importorskip("gymnasium")
     from src.checkers.env import Checkers6x6Env
 
@@ -80,6 +92,8 @@ def test_multi_jump_is_forced_in_env():
 
 
 def test_promotion_to_king():
+    """Simple pawn reaching back rank should become a king."""
+
     board = empty_board()
     board[4][1] = "b"
     move = Move(from_row=4, from_col=1, to_row=5, to_col=0)
@@ -92,6 +106,8 @@ def test_promotion_to_king():
 
 
 def test_terminal_detection_when_player_has_no_legal_moves():
+    """If the side to move has no moves, the opponent wins immediately."""
+
     pytest.importorskip("gymnasium")
     from src.checkers.env import Checkers6x6Env
 

@@ -1,3 +1,5 @@
+"""Tkinter GUI for human vs. AI 6x6 checkers games."""
+
 from __future__ import annotations
 
 import argparse
@@ -28,6 +30,8 @@ DARK = "#B58863"
 
 
 def load_ai(opponent: str, q_table: str, seed: int):
+    """Instantiate the requested opponent type."""
+
     if opponent == "random":
         return RandomAgent(seed=seed)
     if opponent == "heuristic":
@@ -40,6 +44,8 @@ def load_ai(opponent: str, q_table: str, seed: int):
 
 
 def ai_move_index(ai, board, player, legal_moves):
+    """Dispatch to the agent-specific move selection helper."""
+
     if isinstance(ai, HeuristicAgent):
         return ai.select_move_index(board, player, legal_moves)
     if isinstance(ai, QTableAgent):
@@ -50,7 +56,11 @@ def ai_move_index(ai, board, player, legal_moves):
 
 
 class CheckersHvAIGUI:
+    """Controller + view for playing the AI in a Tkinter window."""
+
     def __init__(self, root: tk.Tk, opponent: str, human_color: str, q_table: str, seed: int):
+        """Initialize game state, canvas, and UI callbacks."""
+
         self.root = root
         self.human_color = human_color
         self.ai_color = "r" if human_color == "b" else "b"
@@ -82,6 +92,8 @@ class CheckersHvAIGUI:
         self.root.after(150, self.maybe_ai_turn)
 
     def draw_board(self):
+        """Render the alternating light/dark board squares."""
+
         for r in range(BOARD_SIZE):
             for c in range(BOARD_SIZE):
                 color = DARK if (r + c) % 2 else LIGHT
@@ -95,6 +107,8 @@ class CheckersHvAIGUI:
                 )
 
     def draw_piece(self, r, c, color, king=False):
+        """Draw a checker piece token at the requested square."""
+
         x = c * SQUARE_SIZE + SQUARE_SIZE // 2
         y = r * SQUARE_SIZE + SQUARE_SIZE // 2
         rad = SQUARE_SIZE // 2 - 12
@@ -113,6 +127,8 @@ class CheckersHvAIGUI:
             self.canvas.create_text(x, y, text="K", fill="gold", font=("Arial", 20, "bold"))
 
     def highlight(self, r, c, color="blue"):
+        """Outline a square to indicate selection or force state."""
+
         self.canvas.create_rectangle(
             c * SQUARE_SIZE,
             r * SQUARE_SIZE,
@@ -123,6 +139,8 @@ class CheckersHvAIGUI:
         )
 
     def render(self):
+        """Redraw the board, pieces, and active highlights."""
+
         self.canvas.delete("all")
         self.draw_board()
 
@@ -140,6 +158,8 @@ class CheckersHvAIGUI:
             self.highlight(*self.forced_piece, color="orange")
 
     def update_status(self):
+        """Update the status label with the latest turn information."""
+
         legal = all_legal_moves(self.board, self.player, self.forced_piece)
         if not legal:
             winner = "Red" if self.player == "b" else "Black"
@@ -156,6 +176,8 @@ class CheckersHvAIGUI:
             self.status.config(text=f"Turn: {who} ({turn})")
 
     def on_click(self, event):
+        """Handle user interactions for selecting and moving pieces."""
+
         if self.game_over or self.player != self.human_color:
             return
 
@@ -194,6 +216,8 @@ class CheckersHvAIGUI:
         self.apply_and_advance(chosen)
 
     def apply_and_advance(self, chosen):
+        """Apply a move, handle forced jumps, and maybe trigger the AI."""
+
         was_cap, was_prom = apply_move(self.board, chosen)
 
         if was_cap and not was_prom:
@@ -221,6 +245,8 @@ class CheckersHvAIGUI:
             self.root.after(250, self.maybe_ai_turn)
 
     def maybe_ai_turn(self):
+        """Schedule/execute the AI's turn when appropriate."""
+
         if self.game_over or self.player != self.ai_color:
             return
 
@@ -235,6 +261,8 @@ class CheckersHvAIGUI:
 
 
 def parse_args() -> argparse.Namespace:
+    """CLI arguments for the GUI launcher."""
+
     parser = argparse.ArgumentParser(description="Play 6x6 checkers in GUI against AI")
     parser.add_argument("--opponent", choices=["random", "heuristic", "rl"], default="heuristic")
     parser.add_argument("--human-color", choices=["b", "r"], default="b")
@@ -244,6 +272,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Kick off the Tkinter event loop with the configured opponent."""
+
     args = parse_args()
     root = tk.Tk()
     CheckersHvAIGUI(root, args.opponent, args.human_color, args.q_table, args.seed)

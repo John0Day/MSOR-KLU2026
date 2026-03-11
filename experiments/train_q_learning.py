@@ -1,3 +1,5 @@
+"""Legacy tabular Q-learning training loop plus visualization helpers."""
+
 from __future__ import annotations
 
 import argparse
@@ -21,6 +23,8 @@ from src.checkers.env import Checkers6x6Env
 
 @dataclass
 class TrainConfig:
+    """Hyper-parameters governing the legacy Q-learning run."""
+
     episodes: int = 20000
     alpha: float = 0.15
     gamma: float = 0.99
@@ -33,6 +37,8 @@ class TrainConfig:
 
 
 def moving_average(values: list[float], window: int) -> np.ndarray:
+    """Compute a simple moving average as a numpy array."""
+
     if len(values) < window:
         return np.array(values, dtype=np.float64)
     kernel = np.ones(window) / window
@@ -40,6 +46,8 @@ def moving_average(values: list[float], window: int) -> np.ndarray:
 
 
 def _greedy_action(q: dict, obs: dict, legal_n: int) -> int:
+    """Argmax action for the current observation under table ``q``."""
+
     if legal_n == 0:
         return 0
     s = state_hash(obs)
@@ -48,6 +56,8 @@ def _greedy_action(q: dict, obs: dict, legal_n: int) -> int:
 
 
 def play_game(q_agent: QTableAgent, opponent, seed: int) -> tuple[int, int]:
+    """Run a single self-contained match between ``q_agent`` and ``opponent``."""
+
     env = Checkers6x6Env(seed=seed)
     env.reset(seed=seed)
     steps = 0
@@ -71,6 +81,8 @@ def play_game(q_agent: QTableAgent, opponent, seed: int) -> tuple[int, int]:
 
 
 def evaluate_q_agent(q: dict, opponent_name: str, games: int, seed: int) -> float:
+    """Return win-rate over ``games`` against the requested opponent."""
+
     q_agent = QTableAgent(q, epsilon=0.0, seed=seed)
     opponent = RandomAgent(seed=seed + 1) if opponent_name == "random" else HeuristicAgent()
 
@@ -83,6 +95,8 @@ def evaluate_q_agent(q: dict, opponent_name: str, games: int, seed: int) -> floa
 
 
 def train_q_learning(config: TrainConfig, opponent_name: str = "heuristic"):
+    """Main training loop that alternates between acting and opponent replies."""
+
     rng = np.random.default_rng(config.seed)
     env = Checkers6x6Env(seed=config.seed)
     q: dict[tuple[tuple[tuple[int, ...], int], int], float] = {}
@@ -186,6 +200,8 @@ def train_q_learning(config: TrainConfig, opponent_name: str = "heuristic"):
 
 
 def save_results(results: dict, out_dir: Path) -> None:
+    """Persist the learned table and metrics as numpy archives."""
+
     out_dir.mkdir(parents=True, exist_ok=True)
 
     q = results["q"]
@@ -203,6 +219,8 @@ def save_results(results: dict, out_dir: Path) -> None:
 
 
 def plot_training(results: dict, out_dir: Path) -> None:
+    """Create PNG plots summarizing learning curves."""
+
     out_dir.mkdir(parents=True, exist_ok=True)
 
     rewards = results["rewards"]
@@ -254,6 +272,8 @@ def plot_training(results: dict, out_dir: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """CLI options for the legacy trainer."""
+
     parser = argparse.ArgumentParser(description="Train tabular Q-learning on 6x6 checkers")
     parser.add_argument("--episodes", type=int, default=20000)
     parser.add_argument("--seed", type=int, default=42)
@@ -263,6 +283,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Entry point that wires CLI arguments into the trainer helpers."""
+
     args = parse_args()
     cfg = TrainConfig(episodes=args.episodes, seed=args.seed)
     results = train_q_learning(cfg, opponent_name=args.opponent)

@@ -1,3 +1,5 @@
+"""Plotting bridge that reuses the external Chandan visualization code."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,6 +18,8 @@ if str(CORE_DIR) not in sys.path:
 
 
 def _load_module(module_name: str, path: Path):
+    """Import ``module_name`` found at ``path`` so we can call its functions."""
+
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load module {module_name} from {path}")
@@ -25,6 +29,8 @@ def _load_module(module_name: str, path: Path):
 
 
 def _ensure_chandan_stats(metrics_path: Path, core_stats_path: Path) -> None:
+    """Normalize our metrics npz format to the core expectations."""
+
     data = np.load(metrics_path, allow_pickle=True)
     if "eval_win_p1_heuristic" in data.files and "eval_win_p2_heuristic" in data.files:
         shutil.copy2(metrics_path, core_stats_path)
@@ -45,6 +51,8 @@ def _ensure_chandan_stats(metrics_path: Path, core_stats_path: Path) -> None:
 
 
 def _ensure_chandan_qtable(q_table_path: Path, core_q_path: Path) -> None:
+    """Convert the numpy Q-table archive into the pickle format if needed."""
+
     if q_table_path.suffix == ".pkl":
         shutil.copy2(q_table_path, core_q_path)
         return
@@ -56,6 +64,8 @@ def _ensure_chandan_qtable(q_table_path: Path, core_q_path: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """CLI for the extended plotting script."""
+
     p = argparse.ArgumentParser(description="Generate Chandan 1:1 plots")
     p.add_argument("--metrics", type=str, default="experiments/results/training_metrics.npz")
     p.add_argument("--out", type=str, default="experiments/results")
@@ -67,6 +77,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Copy/convert inputs, call the core plotters, and gather outputs."""
+
     args = parse_args()
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)

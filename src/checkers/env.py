@@ -1,3 +1,5 @@
+"""Gymnasium-compatible wrapper for the 6x6 checkers environment."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -21,6 +23,8 @@ INT_TO_PIECE = {v: k for k, v in PIECE_TO_INT.items()}
 
 
 class Checkers6x6Env(gym.Env):
+    """Environment that exposes the custom rules via the Gymnasium API."""
+
     metadata = {"render_modes": ["human"], "render_fps": 4}
 
     def __init__(
@@ -51,6 +55,8 @@ class Checkers6x6Env(gym.Env):
         self._move_count = 0
 
     def _encode_board(self) -> np.ndarray:
+        """Return the board as an integer matrix expected by the observation space."""
+
         arr = np.zeros((BOARD_SIZE, BOARD_SIZE), dtype=np.int8)
         for r in range(BOARD_SIZE):
             for c in range(BOARD_SIZE):
@@ -58,26 +64,36 @@ class Checkers6x6Env(gym.Env):
         return arr
 
     def _obs(self) -> dict[str, Any]:
+        """Assemble the structured observation dict."""
+
         return {
             "board": self._encode_board(),
             "player_to_move": 0 if self.player == "b" else 1,
         }
 
     def action_mask(self) -> np.ndarray:
+        """Binary mask marking how many entries of the discrete action space are valid."""
+
         mask = np.zeros(self.max_moves, dtype=np.int8)
         legal = min(len(self.legal_moves), self.max_moves)
         mask[:legal] = 1
         return mask
 
     def _refresh_legal_moves(self) -> None:
+        """Recompute the current legal move list, honoring forced capture state."""
+
         self.legal_moves = all_legal_moves(self.board, self.player, self.forced_piece)
 
     def _winner_if_terminal(self) -> str | None:
+        """Return the winning color if the position is terminal for lack of moves."""
+
         if self.legal_moves:
             return None
         return "r" if self.player == "b" else "b"
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
+        """Reset the game to the initial state and return observation + mask."""
+
         if seed is not None:
             self._rng = np.random.default_rng(seed)
 
@@ -89,6 +105,8 @@ class Checkers6x6Env(gym.Env):
         return self._obs(), {"action_mask": self.action_mask()}
 
     def step(self, action: int):
+        """Apply ``action`` and follow the Gymnasium step contract."""
+
         self._move_count += 1
 
         if self._move_count > self.max_turns:
@@ -145,6 +163,8 @@ class Checkers6x6Env(gym.Env):
         return self._obs(), reward, False, False, {"action_mask": self.action_mask()}
 
     def render(self):
+        """Console renderer that mirrors :func:`src.checkers.core.print_board`."""
+
         print("\n  a b c d e f")
         for r in range(BOARD_SIZE):
             row_label = BOARD_SIZE - r

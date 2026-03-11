@@ -1,3 +1,5 @@
+"""Command-line helper that centralizes common project entry points."""
+
 from __future__ import annotations
 
 import argparse
@@ -13,6 +15,8 @@ ANSI_PRIMARY = "\033[38;5;208m"
 
 
 def _run(cmd: list[str], headless: bool = False) -> int:
+    """Execute ``cmd`` inside the repo root, optionally forcing headless plotting."""
+
     env = os.environ.copy()
     if headless:
         env.setdefault("MPLBACKEND", "Agg")
@@ -22,14 +26,20 @@ def _run(cmd: list[str], headless: bool = False) -> int:
 
 
 def run_human_cli() -> int:
+    """Launch the terminal-based checkers game."""
+
     return _run([sys.executable, str(ROOT / "checkers6x6.py")])
 
 
 def run_human_gui() -> int:
+    """Launch the legacy pygame GUI inside ``Checkers/gui_checkers.py``."""
+
     return _run([sys.executable, str(ROOT / "Checkers" / "gui_checkers.py")])
 
 
 def run_ai_cli(args: argparse.Namespace) -> int:
+    """Run the CLI human-vs-agent loop."""
+
     cmd = [
         sys.executable,
         str(ROOT / "play" / "human_vs_ai_cli.py"),
@@ -46,6 +56,8 @@ def run_ai_cli(args: argparse.Namespace) -> int:
 
 
 def run_ai_gui(args: argparse.Namespace) -> int:
+    """Run the pygame GUI with a human playing against a selected agent."""
+
     cmd = [
         sys.executable,
         str(ROOT / "play" / "human_vs_ai_gui.py"),
@@ -62,6 +74,8 @@ def run_ai_gui(args: argparse.Namespace) -> int:
 
 
 def run_train(args: argparse.Namespace) -> int:
+    """Train the extended Q-learning agent according to CLI flags."""
+
     cmd = [
         sys.executable,
         str(ROOT / "experiments" / "train_extended.py"),
@@ -82,6 +96,8 @@ def run_train(args: argparse.Namespace) -> int:
 
 
 def run_eval(args: argparse.Namespace) -> int:
+    """Evaluate a saved table using the new extended evaluation harness."""
+
     cmd = [
         sys.executable,
         str(ROOT / "experiments" / "evaluate_extended_agents.py"),
@@ -101,10 +117,14 @@ def run_eval(args: argparse.Namespace) -> int:
 
 
 def run_tests() -> int:
+    """Run pytest with quiet output."""
+
     return _run([sys.executable, "-m", "pytest", "-q"], headless=True)
 
 
 def run_train_extended(args: argparse.Namespace) -> int:
+    """Alias kept for backwards compatibility with the ``train`` subcommand."""
+
     cmd = [
         sys.executable,
         str(ROOT / "experiments" / "train_extended.py"),
@@ -125,6 +145,8 @@ def run_train_extended(args: argparse.Namespace) -> int:
 
 
 def run_train_legacy(args: argparse.Namespace) -> int:
+    """Invoke the legacy training script from the ``experiments`` folder."""
+
     cmd = [
         sys.executable,
         str(ROOT / "experiments" / "train_q_learning.py"),
@@ -141,6 +163,8 @@ def run_train_legacy(args: argparse.Namespace) -> int:
 
 
 def run_eval_legacy(args: argparse.Namespace) -> int:
+    """Evaluate tables with the original evaluate_agents program."""
+
     cmd = [
         sys.executable,
         str(ROOT / "experiments" / "evaluate_agents.py"),
@@ -160,6 +184,8 @@ def run_eval_legacy(args: argparse.Namespace) -> int:
 
 
 def run_play_extended(args: argparse.Namespace) -> int:
+    """Pit two agents (or self-play) using the extended evaluation script."""
+
     cmd = [
         sys.executable,
         str(ROOT / "play" / "evaluate_extended.py"),
@@ -181,6 +207,8 @@ def run_play_extended(args: argparse.Namespace) -> int:
 
 
 def run_plots_extended(args: argparse.Namespace) -> int:
+    """Render training metrics and optional policy performance plots."""
+
     cmd = [
         sys.executable,
         str(ROOT / "experiments" / "plots_extended.py"),
@@ -201,6 +229,8 @@ def run_plots_extended(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Construct the argparse parser exposing every launcher subcommand."""
+
     parser = argparse.ArgumentParser(description="Unified launcher for MSOR-KLU2026 checkers")
     sub = parser.add_subparsers(dest="mode", required=True)
 
@@ -278,14 +308,20 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _print_line(num: str, title: str, desc: str) -> None:
+    """Render a single bullet inside the interactive menu."""
+
     print(f"  {num} {ANSI_OPTION}{title}{ANSI_RESET} - {desc}")
 
 
 def _print_primary_line(num: str, title: str, desc: str) -> None:
+    """Highlight a primary workflow item when drawing the menu."""
+
     print(f"  {num} {ANSI_PRIMARY}{title}{ANSI_RESET} - {desc}")
 
 
 def _prompt_choice(prompt: str, options: dict[str, str], invalid_hint: str) -> str:
+    """Keep asking the user until a valid option key is provided."""
+
     while True:
         choice = input(prompt).strip()
         if choice in options:
@@ -294,6 +330,8 @@ def _prompt_choice(prompt: str, options: dict[str, str], invalid_hint: str) -> s
 
 
 def _interactive_mode_selection() -> list[str]:
+    """Guide the user through the interactive prompt when no args are given."""
+
     options = {
         "1": "play-human",
         "2": "play-ai",
@@ -397,6 +435,8 @@ def _interactive_mode_selection() -> list[str]:
 
 
 def main() -> int:
+    """Entry point for the launcher that dispatches to the chosen workflow."""
+
     parser = build_parser()
     if len(sys.argv) == 1:
         selected_args = _interactive_mode_selection()

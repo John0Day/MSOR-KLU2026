@@ -1,3 +1,5 @@
+"""Tabular Q-learning agents and helpers for the 6x6 checkers project."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -5,11 +7,15 @@ import numpy as np
 from src.checkers.core import BOARD_SIZE, Move
 
 def state_hash(obs: dict) -> tuple[tuple[int, ...], int]:
+    """Hash an observation dict into (board tuple, current-player flag)."""
+
     board = tuple(obs["board"].reshape(-1).tolist())
     return board, int(obs["player_to_move"])
 
 
 def encode_board_state(board: list[list[str]]) -> tuple[int, ...]:
+    """Map a character board into an integer tuple that is hashable."""
+
     mapping = {".": 0, "b": 1, "B": 2, "r": 3, "R": 4}
     out: list[int] = []
     for r in range(BOARD_SIZE):
@@ -19,12 +25,21 @@ def encode_board_state(board: list[list[str]]) -> tuple[int, ...]:
 
 
 class QTableAgent:
-    def __init__(self, q_table: dict[tuple[tuple[tuple[int, ...], int], int], float], epsilon: float = 0.0, seed: int = 0):
+    """Simple epsilon-greedy agent backed by a fixed Q-table."""
+
+    def __init__(
+        self,
+        q_table: dict[tuple[tuple[tuple[int, ...], int], int], float],
+        epsilon: float = 0.0,
+        seed: int = 0,
+    ):
         self.q = q_table
         self.epsilon = epsilon
         self.rng = np.random.default_rng(seed)
 
     def select_move_index(self, board: list[list[str]], player: str, legal_moves: list[Move]) -> int:
+        """Select a move index given a raw board + player turn."""
+
         legal_n = len(legal_moves)
         if legal_n == 0:
             return 0
@@ -39,21 +54,24 @@ class QTableAgent:
         return int(np.argmax(values))
 
     def select_action(self, env) -> int:
+        """Gym-style adapter that queries ``env`` attributes."""
+
         return self.select_move_index(env.board, env.player, env.legal_moves)
 
 
 def move_to_action(move: Move) -> tuple[int, int, int, int]:
+    """Encode a move so it can be used as a dictionary key."""
+
     return (move.from_row, move.from_col, move.to_row, move.to_col)
 
 
 def canonical_state_hash(obs: dict) -> tuple[int, ...]:
-    """
-    Canonical board state from side-to-move perspective.
+    """Return a player-invariant encoding that always treats the mover as black.
 
-    If red is to move, rotate board by 180 degrees and swap colors so the state
-    is always represented as "current player = black". Only playable squares are
-    encoded to reduce state dimensionality.
+    The board is rotated + recolored when red is to move and only playable
+    squares are retained so the representation stays compact.
     """
+
     board = np.array(obs["board"], dtype=np.int8)
     player_to_move = int(obs["player_to_move"])
     if player_to_move == 1:
@@ -69,9 +87,7 @@ def canonical_state_hash(obs: dict) -> tuple[int, ...]:
 
 
 class AdaptiveQTableAgent:
-    """
-    Q-table agent with state-dependent epsilon and dynamic alpha(s,a).
-    """
+    """Q-table agent with state-dependent exploration and adaptive updates."""
 
     def __init__(self, q_table: dict | None = None, seed: int = 0, n0: float = 100.0):
         self.q: dict[tuple[tuple[int, ...], tuple[int, int, int, int]], float] = q_table or {}
@@ -81,9 +97,13 @@ class AdaptiveQTableAgent:
         self.s_visits: dict[tuple[int, ...], int] = {}
 
     def get_q(self, s: tuple[int, ...], a: tuple[int, int, int, int]) -> float:
+        """Return the stored value for ``(s, a)`` (0.0 if unseen)."""
+
         return self.q.get((s, a), 0.0)
 
     def _epsilon(self, s: tuple[int, ...], exploit_only: bool) -> float:
+        """Decrease exploration with every visit unless ``exploit_only`` is set."""
+
         if exploit_only:
             return 0.0
         n = self.s_visits.get(s, 0) + 1
@@ -91,12 +111,16 @@ class AdaptiveQTableAgent:
         return float(self.n0 / (self.n0 + n))
 
     def greedy_action(self, s: tuple[int, ...], legal_moves: list[Move]) -> int:
+        """Return the argmax action index for a canonical state hash."""
+
         if not legal_moves:
             return 0
         values = [self.get_q(s, move_to_action(m)) for m in legal_moves]
         return int(np.argmax(values))
 
     def select_move_index(self, obs: dict, legal_moves: list[Move], exploit_only: bool = False) -> int:
+        """Epsilon-greedy policy over the canonical state hash."""
+
         if not legal_moves:
             return 0
         s = canonical_state_hash(obs)
@@ -114,6 +138,8 @@ class AdaptiveQTableAgent:
         legal_next_moves: list[Move],
         gamma: float,
     ) -> None:
+        """Incrementally update Q(s, a) with a decaying step size."""
+
         key = (s, action)
         n = self.sa_visits.get(key, 0) + 1
         self.sa_visits[key] = n

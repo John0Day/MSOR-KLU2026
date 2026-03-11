@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Shebang: lets you run this file as an executable script on Unix-like systems (e.g., ./game.py)
 # Not part of the game model; it's OS/runtime metadata.
+"""CLI implementation of 6x6 checkers with inline educational commentary."""
 
 from dataclasses import dataclass
 # dataclass: convenient way to define immutable/structured records (we use it for Move objects)

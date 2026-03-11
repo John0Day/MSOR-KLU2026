@@ -1,3 +1,5 @@
+"""Custom Gymnasium environment for MSOR's 6x6 checkers rules."""
+
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces

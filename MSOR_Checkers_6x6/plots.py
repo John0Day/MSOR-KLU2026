@@ -1,3 +1,5 @@
+"""Plot helpers used to visualize MSOR Q-learning training artifacts."""
+
 from pathlib import Path
 from typing import Dict
 
@@ -16,6 +18,8 @@ MODEL_PATH = ROOT / "q_table.pkl"
 
 
 def plot_learning_curve(window: int = 1000):
+    """Plot training vs evaluation win rates using moving averages."""
+
     data = np.load(STATS_PATH)
     rewards = data["rewards"]
     winners = data["winners"]
@@ -64,6 +68,8 @@ def plot_learning_curve(window: int = 1000):
 
 
 def plot_state_space_growth():
+    """Plot how the Q-table grows over time in number of entries."""
+
     data = np.load(STATS_PATH)
     num_episodes = int(data["num_episodes"])
     q_table_sizes = data["q_table_sizes"]
@@ -81,6 +87,8 @@ def plot_state_space_growth():
 
 
 def plot_game_length(window: int = 1000):
+    """Chart episode length trends over training (moving average)."""
+
     data = np.load(STATS_PATH)
     episode_lengths = data["episode_lengths"]
     num_episodes = int(data["num_episodes"])
@@ -99,6 +107,8 @@ def plot_game_length(window: int = 1000):
 
 
 def plot_p1_vs_p2_eval():
+    """Compare evaluation win rates when the agent plays as P1 vs P2."""
+
     data = np.load(STATS_PATH)
     num_episodes = int(data["num_episodes"])
     eval_win_p1_heuristic = data["eval_win_p1_heuristic"]

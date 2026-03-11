@@ -1,3 +1,5 @@
+"""Bridge script that drives the external extended RL training pipeline."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,6 +18,8 @@ if str(CORE_DIR) not in sys.path:
 
 
 def _load_module(module_name: str, path: Path):
+    """Import ``module_name`` from ``path`` without polluting sys.path globally."""
+
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load module {module_name} from {path}")
@@ -25,6 +29,8 @@ def _load_module(module_name: str, path: Path):
 
 
 def _to_runner_metrics(stats_path: Path, out_path: Path) -> None:
+    """Convert the core stats npz file into the runner-friendly format."""
+
     data = np.load(stats_path, allow_pickle=True)
     np.savez_compressed(
         out_path,
@@ -41,6 +47,8 @@ def _to_runner_metrics(stats_path: Path, out_path: Path) -> None:
 
 
 def _pkl_to_npy(q_pkl: Path, q_npy: Path) -> None:
+    """Mirror the saved pickle Q-table as a numpy array for convenience."""
+
     with q_pkl.open("rb") as f:
         q_table = pickle.load(f)
     arr = np.array(list(q_table.items()), dtype=object)
@@ -48,6 +56,8 @@ def _pkl_to_npy(q_pkl: Path, q_npy: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """CLI knobs exposed by the wrapper (mirrors ``run.py train`` flags)."""
+
     p = argparse.ArgumentParser(description="Train extended RL using Chandan core pipeline")
     p.add_argument("--episodes", type=int, default=100000)
     p.add_argument("--gamma", type=float, default=0.99)
@@ -59,6 +69,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Invoke the core training module and copy/convert its artifacts."""
+
     args = parse_args()
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)

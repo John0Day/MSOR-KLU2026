@@ -1,3 +1,5 @@
+"""Core game logic for 6x6 checkers (board, moves, parsing utilities)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,6 +10,8 @@ EMPTY = "."
 
 @dataclass(frozen=True)
 class Move:
+    """Immutable move descriptor used throughout the engine."""
+
     from_row: int
     from_col: int
     to_row: int
@@ -16,6 +20,8 @@ class Move:
 
 
 def create_board() -> list[list[str]]:
+    """Construct the starting position with two rows of men per side."""
+
     board = [[EMPTY for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
     for row in range(2):
@@ -32,14 +38,20 @@ def create_board() -> list[list[str]]:
 
 
 def clone_board(board: list[list[str]]) -> list[list[str]]:
+    """Return a shallow copy of the board grid."""
+
     return [row[:] for row in board]
 
 
 def in_bounds(row: int, col: int) -> bool:
+    """True when (row, col) sits on the BOARD_SIZE square."""
+
     return 0 <= row < BOARD_SIZE and 0 <= col < BOARD_SIZE
 
 
 def owner(piece: str) -> str | None:
+    """Map a board symbol to its owning player (or ``None`` for empty)."""
+
     if piece in ("b", "B"):
         return "b"
     if piece in ("r", "R"):
@@ -48,6 +60,8 @@ def owner(piece: str) -> str | None:
 
 
 def move_dirs(piece: str) -> list[tuple[int, int]]:
+    """Return the diagonal direction vectors allowed for the given piece."""
+
     if piece == "b":
         return [(1, -1), (1, 1)]
     if piece == "r":
@@ -56,6 +70,8 @@ def move_dirs(piece: str) -> list[tuple[int, int]]:
 
 
 def piece_moves(board: list[list[str]], row: int, col: int) -> tuple[list[Move], list[Move]]:
+    """Generate (normal, capture) moves for the piece at ``(row, col)``."""
+
     piece = board[row][col]
     if piece == EMPTY:
         return [], []
@@ -102,6 +118,8 @@ def piece_moves(board: list[list[str]], row: int, col: int) -> tuple[list[Move],
 def all_legal_moves(
     board: list[list[str]], player: str, forced_from: tuple[int, int] | None = None
 ) -> list[Move]:
+    """Generate all moves for ``player`` respecting capture/forced jump rules."""
+
     normals: list[Move] = []
     captures: list[Move] = []
 
@@ -119,6 +137,8 @@ def all_legal_moves(
 
 
 def promote_if_needed(piece: str, row: int) -> str:
+    """Promote a man to king if it just landed on the last rank."""
+
     if piece == "b" and row == BOARD_SIZE - 1:
         return "B"
     if piece == "r" and row == 0:
@@ -127,6 +147,8 @@ def promote_if_needed(piece: str, row: int) -> str:
 
 
 def apply_move(board: list[list[str]], move: Move) -> tuple[bool, bool]:
+    """Mutate ``board`` by applying ``move`` and return capture/promotion flags."""
+
     piece = board[move.from_row][move.from_col]
     board[move.from_row][move.from_col] = EMPTY
     board[move.to_row][move.to_col] = piece
@@ -145,6 +167,8 @@ def apply_move(board: list[list[str]], move: Move) -> tuple[bool, bool]:
 
 
 def has_pieces(board: list[list[str]], player: str) -> bool:
+    """Check whether ``player`` owns any piece on the board."""
+
     for row in board:
         for piece in row:
             if owner(piece) == player:
@@ -153,6 +177,8 @@ def has_pieces(board: list[list[str]], player: str) -> bool:
 
 
 def print_board(board: list[list[str]]) -> None:
+    """Pretty-print the board using algebraic-style labels."""
+
     print("\n  a b c d e f")
     for row in range(BOARD_SIZE):
         label = BOARD_SIZE - row
@@ -161,6 +187,8 @@ def print_board(board: list[list[str]]) -> None:
 
 
 def parse_square(token: str) -> tuple[int, int] | None:
+    """Parse coordinates like ``\"b5\"`` into zero-based indices."""
+
     token = token.strip().lower()
     if len(token) != 2:
         return None
@@ -175,10 +203,14 @@ def parse_square(token: str) -> tuple[int, int] | None:
 
 
 def square_name(row: int, col: int) -> str:
+    """Convert zero-based coordinates back to labels such as ``\"b5\"``."""
+
     return f"{chr(ord('a') + col)}{BOARD_SIZE - row}"
 
 
 def parse_move(text: str) -> tuple[tuple[int, int], tuple[int, int]] | None:
+    """Parse ``\"b6 a5\"`` textual moves into endpoint coordinates."""
+
     parts = text.strip().lower().split()
     if len(parts) != 2:
         return None

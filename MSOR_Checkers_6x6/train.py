@@ -1,3 +1,5 @@
+"""Extended MSOR self-play training loop with curriculum + evaluation."""
+
 import pickle
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
@@ -430,6 +432,8 @@ def train(
     num_episodes: int = 100_000,
     gamma: float = 0.99,
 ):
+    """Main entry point that runs training and persists checkpoints/stats."""
+
     # Global seeding for reproducibility
     set_seed(42)
 

@@ -1,3 +1,5 @@
+"""Wrapper that proxies extended evaluation into the provided core module."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,6 +18,8 @@ if str(CORE_DIR) not in sys.path:
 
 
 def _load_module(module_name: str, path: Path):
+    """Dynamically import ``module_name`` from ``path``."""
+
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load module {module_name} from {path}")
@@ -25,6 +29,8 @@ def _load_module(module_name: str, path: Path):
 
 
 def _ensure_core_qtable(q_table_path: Path, core_q_path: Path) -> None:
+    """Convert ``.npy`` tables to pickle so the core code can read them."""
+
     if q_table_path.suffix == ".pkl":
         shutil.copy2(q_table_path, core_q_path)
         return
@@ -35,6 +41,8 @@ def _ensure_core_qtable(q_table_path: Path, core_q_path: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse CLI options for the extended evaluator."""
+
     p = argparse.ArgumentParser(description="Play/evaluate using Chandan core policy")
     p.add_argument("--q-table", type=str, default="experiments/results/q_table.pkl")
     p.add_argument("--episodes", type=int, default=20)
@@ -47,6 +55,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Load the core module and report win/loss/draw statistics."""
+
     args = parse_args()
     _ensure_core_qtable(Path(args.q_table), CORE_DIR / "q_table.pkl")
 

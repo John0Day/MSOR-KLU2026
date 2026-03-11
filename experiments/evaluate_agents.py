@@ -1,3 +1,5 @@
+"""Legacy evaluation harness for tabular agents within this repo."""
+
 from __future__ import annotations
 
 import argparse
@@ -21,11 +23,15 @@ from src.checkers.env import Checkers6x6Env
 
 
 def load_q_table(path: Path) -> dict:
+    """Load the serialized numpy array into a python dict."""
+
     items = np.load(path, allow_pickle=True)
     return dict(items.tolist())
 
 
 def _material_balance_black(board: list[list[str]]) -> int:
+    """Helper that scores material in black's favor."""
+
     values = {"b": 1, "B": 2, "r": 1, "R": 2}
     black = 0
     red = 0
@@ -39,6 +45,8 @@ def _material_balance_black(board: list[list[str]]) -> int:
 
 
 def _wilson_interval(successes: float, total: float, z: float = 1.96) -> tuple[float, float]:
+    """Approximate a binomial confidence interval (95% by default)."""
+
     if total <= 0:
         return 0.0, 0.0
     phat = successes / total
@@ -49,6 +57,8 @@ def _wilson_interval(successes: float, total: float, z: float = 1.96) -> tuple[f
 
 
 def play_game(black_agent, red_agent, seed: int) -> dict:
+    """Simulate a single game and collect per-side statistics."""
+
     env = Checkers6x6Env(seed=seed)
     env.reset(seed=seed)
     steps = 0
@@ -102,6 +112,8 @@ def play_game(black_agent, red_agent, seed: int) -> dict:
 
 
 def matchup(agent_a, agent_b, games: int, seed: int, alternate_start: bool = True) -> dict[str, float]:
+    """Play ``games`` between ``agent_a`` and ``agent_b`` and aggregate stats."""
+
     a_wins = 0
     a_losses = 0
     draws = 0
@@ -157,6 +169,8 @@ def matchup(agent_a, agent_b, games: int, seed: int, alternate_start: bool = Tru
 
 
 def bar_plot(results: dict[str, float], out_path: Path) -> None:
+    """Render a simple win-rate bar chart."""
+
     labels = list(results.keys())
     values = [results[k] for k in labels]
     plt.figure(figsize=(9, 5))
@@ -171,6 +185,8 @@ def bar_plot(results: dict[str, float], out_path: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """CLI arguments shared with :mod:`run.py eval-legacy`."""
+
     p = argparse.ArgumentParser(description="Evaluate RL/Heuristic/Random agents")
     p.add_argument("--q-table", type=str, default="experiments/results/q_table.npy")
     p.add_argument("--games", type=int, default=300)
@@ -182,6 +198,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def evaluate_for_seed(q: dict, games: int, seed: int, alternate_start: bool) -> dict[str, dict[str, float]]:
+    """Evaluate RL vs other baselines for a single seed."""
+
     rl = QTableAgent(q, epsilon=0.0, seed=seed)
     heuristic = HeuristicAgent()
     random_agent = RandomAgent(seed=seed + 1)
@@ -194,6 +212,8 @@ def evaluate_for_seed(q: dict, games: int, seed: int, alternate_start: bool) -> 
 
 
 def aggregate_over_seeds(per_seed: dict[str, dict[str, dict[str, float]]]) -> dict[str, dict[str, float]]:
+    """Combine per-seed dictionaries into averages and stdevs."""
+
     labels = next(iter(per_seed.values())).keys()
     aggregate: dict[str, dict[str, float]] = {}
     for label in labels:
@@ -216,6 +236,8 @@ def aggregate_over_seeds(per_seed: dict[str, dict[str, dict[str, float]]]) -> di
 
 
 def main() -> None:
+    """Load Q-table, evaluate requested seeds, and save plots/summary."""
+
     args = parse_args()
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)

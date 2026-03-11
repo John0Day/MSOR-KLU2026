@@ -1,3 +1,5 @@
+"""Utilities for playing/evaluating the MSOR Q-learning agent."""
+
 import pickle
 import time
 from pathlib import Path
@@ -22,6 +24,8 @@ def set_seed(seed: int = 42) -> None:
 
 
 def load_agent(env: Checkers6x6Env) -> QLearningAgent:
+    """Load the persisted Q-table and return a configured agent."""
+
     if not MODEL_PATH.exists():
         raise FileNotFoundError(f"No Q-table found at {MODEL_PATH}. Run train.py first.")
     with MODEL_PATH.open("rb") as f:
@@ -33,6 +37,8 @@ def load_agent(env: Checkers6x6Env) -> QLearningAgent:
 
 
 def random_legal_move(env: Checkers6x6Env, player_id: int):
+    """Sample uniformly from the legal moves for ``player_id``."""
+
     import random
 
     moves = env.get_legal_actions(player=player_id)
@@ -161,6 +167,8 @@ def evaluate(
     opponent_type: str = "random",
     render: bool = True,
 ):
+    """Repeatedly run ``run_episode_play`` and print aggregate stats."""
+
     # Global seeding for reproducibility
     set_seed(42)
 

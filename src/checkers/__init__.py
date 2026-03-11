@@ -1,3 +1,5 @@
+"""Public API surface for the checkers engine (core rules + helpers)."""
+
 from .core import (
     BOARD_SIZE,
     Move,

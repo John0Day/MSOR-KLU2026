@@ -1,3 +1,5 @@
+"""Pygame front-end to play the MSOR checkers agents or humans."""
+
 import argparse
 import pickle
 from pathlib import Path
@@ -21,6 +23,8 @@ AI_WAIT_MS = 1300  # delay before AI moves (ms)
 
 
 def load_q_agent(env: Checkers6x6Env) -> QLearningAgent:
+    """Load the saved Q-table and return a configured agent instance."""
+
     if not MODEL_PATH.exists():
         raise FileNotFoundError(f"No Q-table found at {MODEL_PATH}. Run train.py first.")
     with MODEL_PATH.open("rb") as f:
@@ -43,6 +47,8 @@ def draw_board(
     offset_y: int,
     square_size: int,
 ) -> None:
+    """Render the checkerboard, pieces, highlights, and status text."""
+
     screen.fill((0, 0, 0))
 
     width, height = screen.get_size()
@@ -152,6 +158,8 @@ def human_select_move(env: Checkers6x6Env,
 
 
 def main():
+    """Entry point for the Pygame GUI allowing human/agent matchups."""
+
     parser = argparse.ArgumentParser(description="Pygame GUI for 6x6 Checkers RL environment")
     parser.add_argument("--p1", choices=["human", "q_agent", "heuristic"], default="human",
                         help="Controller for Player 1 (Black)")

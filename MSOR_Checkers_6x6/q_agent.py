@@ -1,3 +1,5 @@
+"""Canonical-state Q-learning agent implementation for MSOR experiments."""
+
 from __future__ import annotations
 
 import random
